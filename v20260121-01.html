@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>原生JS轮播图</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .carousel-container {
+            max-width: 800px;
+            margin: 50px auto;
+            position: relative;
+            overflow: hidden;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .carousel-track {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+            height: 400px;
+        }
+
+        .carousel-slide {
+            min-width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .carousel-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .slide-caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.7);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+
+        .carousel-btn:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .carousel-btn.prev {
+            left: 20px;
+        }
+
+        .carousel-btn.next {
+            right: 20px;
+        }
+
+        .carousel-dots {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .carousel-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .carousel-dot.active {
+            background: white;
+            transform: scale(1.2);
+        }
+
+        .carousel-dot:hover {
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .carousel-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 14px;
+            z-index: 10;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="carousel-container" id="carousel">
+        <div class="carousel-track" id="carouselTrack">
+            <!-- 轮播项将通过JS动态添加 -->
+        </div>
+
+        <button class="carousel-btn prev" id="prevBtn">‹</button>
+        <button class="carousel-btn next" id="nextBtn">›</button>
+
+        <div class="carousel-dots" id="carouselDots">
+            <!-- 指示点将通过JS动态添加 -->
+        </div>
+
+        <div class="carousel-indicator" id="carouselIndicator">
+            <span id="currentSlide">1</span> / <span id="totalSlides">0</span>
+        </div>
+    </div>
+
+    <script>
+        class Carousel {
+            constructor(containerId, slides = [], options = {}) {
+                this.container = document.getElementById(containerId);
+                this.slides = slides;
+                this.options = {
+                    autoPlay: true,
+                    interval: 3000,
+                    loop: true,
+                    showDots: true,
+                    showNav: true,
+                    showIndicator: true,
+                    transitionSpeed: 500,
+                    ...options
+                };
+
+                this.currentIndex = 0;
+                this.intervalId = null;
+                this.isAnimating = false;
+
+                this.init();
+            }
+
+            init() {
+                if (this.slides.length === 0) {
+                    this.loadDefaultSlides();
+                }
+
+                this.createTrack();
+
+                if (this.options.showNav) {
+                    this.createNavigation();
+                }
+
+                if (this.options.showDots) {
+                    this.createDots();
+                }
+
+                if (this.options.showIndicator) {
+                    this.updateIndicator();
+                }
+
+                if (this.options.autoPlay) {
+                    this.startAutoPlay();
+                }
+
+                this.setupEventListeners();
+                this.updateSlidePosition();
+            }
+
+            loadDefaultSlides() {
+                this.slides = [
+                    {
+                        image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
+                        caption: '自然风光 - 山脉与湖泊'
+                    },
+                    {
+                        image: 'https://images.unsplash.com/photo-1519681393784-d120267933ba',
+                        caption: '城市夜景 - 灯火辉煌'
+                    },
+                    {
+                        image: 'https://images.unsplash.com/photo-1518837695005-2083093ee35b',
+                        caption: '海滩日落 - 金色沙滩'
+                    },
+                    {
+                        image: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e',
+                        caption: '森林迷雾 - 神秘气息'
+                    },
+                    {
+                        image: 'https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07',
+                        caption: '乡村田野 - 宁静致远'
+                    }
+                ];
+            }
+
+            createTrack() {
+                this.track = this.container.querySelector('.carousel-track') ||
+                    document.createElement('div');
+                this.track.className = 'carousel-track';
+                this.track.style.transitionDuration = `${this.options.transitionSpeed}ms`;
+
+                // 清空现有内容
+                this.track.innerHTML = '';
+
+                // 添加轮播项
+                this.slides.forEach((slide, index) => {
+                    const slideElement = document.createElement('div');
+                    slideElement.className = 'carousel-slide';
+                    slideElement.dataset.index = index;
+
+                    const img = document.createElement('img');
+                    img.src = slide.image;
+                    img.alt = slide.caption;
+
+                    const caption = document.createElement('div');
+                    caption.className = 'slide-caption';
+                    caption.textContent = slide.caption;
+
+                    slideElement.appendChild(img);
+                    slideElement.appendChild(caption);
+                    this.track.appendChild(slideElement);
+                });
+
+                if (!this.container.contains(this.track)) {
+                    this.container.appendChild(this.track);
+                }
+            }
+
+            createNavigation() {
+                // 创建上一页按钮
+                this.prevBtn = document.createElement('button');
+                this.prevBtn.className = 'carousel-btn prev';
+                this.prevBtn.innerHTML = '‹';
+                this.prevBtn.addEventListener('click', () => this.prev());
+
+                // 创建下一页按钮
+                this.nextBtn = document.createElement('button');
+                this.nextBtn.className = 'carousel-btn next';
+                this.nextBtn.innerHTML = '›';
+                this.nextBtn.addEventListener('click', () => this.next());
+
+                this.container.appendChild(this.prevBtn);
+                this.container.appendChild(this.nextBtn);
+            }
+
+            createDots() {
+                this.dotsContainer = document.createElement('div');
+                this.dotsContainer.className = 'carousel-dots';
+
+                this.slides.forEach((_, index) => {
+                    const dot = document.createElement('button');
+                    dot.className = `carousel-dot ${index === 0 ? 'active' : ''}`;
+                    dot.dataset.index = index;
+                    dot.addEventListener('click', () => this.goToSlide(index));
+                    this.dotsContainer.appendChild(dot);
+                });
+
+                this.container.appendChild(this.dotsContainer);
+            }
+
+            updateIndicator() {
+                let indicator = this.container.querySelector('.carousel-indicator');
+                if (!indicator) {
+                    indicator = document.createElement('div');
+                    indicator.className = 'carousel-indicator';
+                    indicator.id = 'carouselIndicator';
+                    this.container.appendChild(indicator);
+                }
+
+                indicator.innerHTML = `
+                    <span id="currentSlide">${this.currentIndex + 1}</span> / 
+                    <span id="totalSlides">${this.slides.length}</span>
+                `;
+            }
+
+            updateSlidePosition() {
+                const slideWidth = this.container.clientWidth;
+                this.track.style.transform = `translateX(-${this.currentIndex * slideWidth}px)`;
+
+                // 更新指示点状态
+                if (this.options.showDots) {
+                    const dots = this.dotsContainer.querySelectorAll('.carousel-dot');
+                    dots.forEach((dot, index) => {
+                        dot.classList.toggle('active', index === this.currentIndex);
+                    });
+                }
+
+                // 更新指示器
+                if (this.options.showIndicator) {
+                    this.updateIndicator();
+                }
+            }
+
+            next() {
+                if (this.isAnimating) return;
+                this.isAnimating = true;
+
+                if (this.currentIndex < this.slides.length - 1) {
+                    this.currentIndex++;
+                } else if (this.options.loop) {
+                    this.currentIndex = 0;
+                }
+
+                this.updateSlidePosition();
+
+                // 重置自动播放
+                if (this.options.autoPlay) {
+                    this.resetAutoPlay();
+                }
+
+                // 防止快速点击
+                setTimeout(() => {
+                    this.isAnimating = false;
+                }, this.options.transitionSpeed);
+            }
+
+            prev() {
+                if (this.isAnimating) return;
+                this.isAnimating = true;
+
+                if (this.currentIndex > 0) {
+                    this.currentIndex--;
+                } else if (this.options.loop) {
+                    this.currentIndex = this.slides.length - 1;
+                }
+
+                this.updateSlidePosition();
+
+                // 重置自动播放
+                if (this.options.autoPlay) {
+                    this.resetAutoPlay();
+                }
+
+                setTimeout(() => {
+                    this.isAnimating = false;
+                }, this.options.transitionSpeed);
+            }
+
+            goToSlide(index) {
+                if (this.isAnimating || index === this.currentIndex) return;
+                this.isAnimating = true;
+
+                this.currentIndex = index;
+                this.updateSlidePosition();
+
+                if (this.options.autoPlay) {
+                    this.resetAutoPlay();
+                }
+
+                setTimeout(() => {
+                    this.isAnimating = false;
+                }, this.options.transitionSpeed);
+            }
+
+            startAutoPlay() {
+                if (this.intervalId) {
+                    clearInterval(this.intervalId);
+                }
+
+                this.intervalId = setInterval(() => {
+                    this.next();
+                }, this.options.interval);
+            }
+
+            stopAutoPlay() {
+                if (this.intervalId) {
+                    clearInterval(this.intervalId);
+                    this.intervalId = null;
+                }
+            }
+
+            resetAutoPlay() {
+                if (this.options.autoPlay) {
+                    this.stopAutoPlay();
+                    this.startAutoPlay();
+                }
+            }
+
+            setupEventListeners() {
+                // 鼠标悬停时暂停自动播放
+                this.container.addEventListener('mouseenter', () => {
+                    this.stopAutoPlay();
+                });
+
+                this.container.addEventListener('mouseleave', () => {
+                    if (this.options.autoPlay) {
+                        this.startAutoPlay();
+                    }
+                });
+
+                // 触摸滑动支持
+                let startX = 0;
+                let endX = 0;
+
+                this.container.addEventListener('touchstart', (e) => {
+                    startX = e.touches[0].clientX;
+                }, { passive: true });
+
+                this.container.addEventListener('touchmove', (e) => {
+                    endX = e.touches[0].clientX;
+                }, { passive: true });
+
+                this.container.addEventListener('touchend', () => {
+                    const threshold = 50;
+                    const diff = startX - endX;
+
+                    if (Math.abs(diff) > threshold) {
+                        if (diff > 0) {
+                            this.next();
+                        } else {
+                            this.prev();
+                        }
+                    }
+                });
+
+                // 窗口大小改变时重新计算位置
+                window.addEventListener('resize', () => {
+                    this.updateSlidePosition();
+                });
+            }
+
+            // 公共方法
+            addSlide(slide) {
+                this.slides.push(slide);
+                this.createTrack();
+                if (this.options.showDots) {
+                    this.createDots();
+                }
+                this.updateIndicator();
+            }
+
+            removeSlide(index) {
+                if (index >= 0 && index < this.slides.length) {
+                    this.slides.splice(index, 1);
+                    if (this.currentIndex >= this.slides.length) {
+                        this.currentIndex = Math.max(0, this.slides.length - 1);
+                    }
+                    this.createTrack();
+                    if (this.options.showDots) {
+                        this.createDots();
+                    }
+                    this.updateIndicator();
+                }
+            }
+        }
+
+        // 初始化轮播图
+        document.addEventListener('DOMContentLoaded', () => {
+            const carousel = new Carousel('carousel', [], {
+                autoPlay: true,
+                interval: 4000,
+                loop: true,
+                showDots: true,
+                showNav: true,
+                showIndicator: true,
+                transitionSpeed: 500
+            });
+
+            // 将carousel实例暴露到全局，方便调试
+            window.carousel = carousel;
+        });
+    </script>
+</body>
+
+</html>

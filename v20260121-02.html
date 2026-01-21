@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>jQuery轮播图！</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .jq-carousel {
+            max-width: 800px;
+            margin: 50px auto;
+            position: relative;
+            overflow: hidden;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .jq-carousel-track {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+        }
+
+        .jq-carousel-slide {
+            min-width: 100%;
+            position: relative;
+        }
+
+        .jq-carousel-slide img {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .jq-slide-caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .jq-carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.7);
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 24px;
+            color: #333;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+
+        .jq-carousel-btn:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .jq-carousel-btn.prev {
+            left: 20px;
+        }
+
+        .jq-carousel-btn.next {
+            right: 20px;
+        }
+
+        .jq-carousel-dots {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            z-index: 10;
+        }
+
+        .jq-carousel-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .jq-carousel-dot.active {
+            background: white;
+            border-color: #fff;
+            transform: scale(1.2);
+        }
+
+        .jq-carousel-dot:hover {
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .jq-carousel-indicator {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 10;
+        }
+
+        .jq-carousel-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .jq-control-btn {
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .jq-control-btn:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+    </style>
+    <!-- 引入jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+    <div class="jq-carousel" id="jqCarousel">
+        <div class="jq-carousel-track">
+            <!-- 轮播项将通过jQuery动态添加 -->
+        </div>
+
+        <button class="jq-carousel-btn prev">‹</button>
+        <button class="jq-carousel-btn next">›</button>
+
+        <div class="jq-carousel-dots">
+            <!-- 指示点将通过jQuery动态添加 -->
+        </div>
+
+        <div class="jq-carousel-indicator">
+            <span class="current-slide">1</span> / <span class="total-slides">0</span>
+        </div>
+
+        <div class="jq-carousel-controls">
+            <button class="jq-control-btn" id="playBtn">暂停</button>
+            <button class="jq-control-btn" id="addSlideBtn">添加图片</button>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            // 默认轮播数据
+            const defaultSlides = [
+                {
+                    image: 'https://images.unsplash.com/photo-1519681393784-d120267933ba',
+                    caption: '城市夜景 - 灯火辉煌'
+                },
+                {
+                    image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
+                    caption: '自然风光 - 山脉与湖泊'
+                },
+                {
+                    image: 'https://images.unsplash.com/photo-1518837695005-2083093ee35b',
+                    caption: '海滩日落 - 金色沙滩'
+                },
+                {
+                    image: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e',
+                    caption: '森林迷雾 - 神秘气息'
+                },
+                {
+                    image: 'https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07',
+                    caption: '乡村田野 - 宁静致远'
+                }
+            ];
+
+            // 轮播图类
+            class JQueryCarousel {
+                constructor(container, slides, options = {}) {
+                    this.$container = $(container);
+                    this.slides = slides || defaultSlides;
+                    this.options = $.extend({
+                        autoPlay: true,
+                        interval: 3000,
+                        loop: true,
+                        showDots: true,
+                        showNav: true,
+                        showIndicator: true,
+                        showControls: true,
+                        transitionSpeed: 500
+                    }, options);
+
+                    this.currentIndex = 0;
+                    this.intervalId = null;
+                    this.isAnimating = false;
+                    this.isPlaying = this.options.autoPlay;
+
+                    this.init();
+                }
+
+                init() {
+                    this.createTrack();
+
+                    if (this.options.showNav) {
+                        this.createNavigation();
+                    }
+
+                    if (this.options.showDots) {
+                        this.createDots();
+                    }
+
+                    if (this.options.showIndicator) {
+                        this.updateIndicator();
+                    }
+
+                    if (this.options.showControls) {
+                        this.createControls();
+                    }
+
+                    if (this.isPlaying) {
+                        this.startAutoPlay();
+                    }
+
+                    this.setupEventListeners();
+                    this.updateSlidePosition();
+                }
+
+                createTrack() {
+                    this.$track = $('.jq-carousel-track', this.$container);
+                    this.$track.empty();
+
+                    $.each(this.slides, (index, slide) => {
+                        const $slide = $(`
+                            <div class="jq-carousel-slide" data-index="${index}">
+                                <img src="${slide.image}" alt="${slide.caption}">
+                                <div class="jq-slide-caption">${slide.caption}</div>
+                            </div>
+                        `);
+                        this.$track.append($slide);
+                    });
+
+                    this.slideWidth = this.$container.width();
+                }
+
+                createNavigation() {
+                    // 如果按钮不存在，则创建
+                    if ($('.jq-carousel-btn.prev', this.$container).length === 0) {
+                        const $prevBtn = $('<button class="jq-carousel-btn prev">‹</button>');
+                        const $nextBtn = $('<button class="jq-carousel-btn next">›</button>');
+
+                        this.$container.append($prevBtn, $nextBtn);
+                    }
+                }
+
+                createDots() {
+                    this.$dotsContainer = $('.jq-carousel-dots', this.$container);
+                    this.$dotsContainer.empty();
+
+                    $.each(this.slides, (index) => {
+                        const $dot = $(`<button class="jq-carousel-dot" data-index="${index}"></button>`);
+                        if (index === this.currentIndex) {
+                            $dot.addClass('active');
+                        }
+                        this.$dotsContainer.append($dot);
+                    });
+                }
+
+                createControls() {
+                    // 如果控制按钮不存在，则创建
+                    if ($('.jq-carousel-controls', this.$container).length === 0) {
+                        const $controls = $(`
+                            <div class="jq-carousel-controls">
+                                <button class="jq-control-btn" id="playBtn">${this.isPlaying ? '暂停' : '播放'}</button>
+                                <button class="jq-control-btn" id="addSlideBtn">添加图片</button>
+                            </div>
+                        `);
+                        this.$container.append($controls);
+                    }
+                }
+
+                updateIndicator() {
+                    const $indicator = $('.jq-carousel-indicator', this.$container);
+                    if ($indicator.length === 0) {
+                        this.$container.append(`
+                            <div class="jq-carousel-indicator">
+                                <span class="current-slide">1</span> / 
+                                <span class="total-slides">${this.slides.length}</span>
+                            </div>
+                        `);
+                    } else {
+                        $indicator.find('.current-slide').text(this.currentIndex + 1);
+                        $indicator.find('.total-slides').text(this.slides.length);
+                    }
+                }
+
+                updateSlidePosition() {
+                    this.slideWidth = this.$container.width();
+                    const translateX = -this.currentIndex * this.slideWidth;
+
+                    this.$track.css({
+                        transform: `translateX(${translateX}px)`,
+                        transitionDuration: `${this.options.transitionSpeed}ms`
+                    });
+
+                    // 更新指示点
+                    $('.jq-carousel-dot', this.$container)
+                        .removeClass('active')
+                        .eq(this.currentIndex)
+                        .addClass('active');
+
+                    // 更新指示器
+                    this.updateIndicator();
+                }
+
+                next() {
+                    if (this.isAnimating) return;
+                    this.isAnimating = true;
+
+                    if (this.currentIndex < this.slides.length - 1) {
+                        this.currentIndex++;
+                    } else if (this.options.loop) {
+                        this.currentIndex = 0;
+                    }
+
+                    this.updateSlidePosition();
+
+                    // 重置自动播放
+                    if (this.isPlaying) {
+                        this.resetAutoPlay();
+                    }
+
+                    setTimeout(() => {
+                        this.isAnimating = false;
+                    }, this.options.transitionSpeed);
+                }
+
+                prev() {
+                    if (this.isAnimating) return;
+                    this.isAnimating = true;
+
+                    if (this.currentIndex > 0) {
+                        this.currentIndex--;
+                    } else if (this.options.loop) {
+                        this.currentIndex = this.slides.length - 1;
+                    }
+
+                    this.updateSlidePosition();
+
+                    if (this.isPlaying) {
+                        this.resetAutoPlay();
+                    }
+
+                    setTimeout(() => {
+                        this.isAnimating = false;
+                    }, this.options.transitionSpeed);
+                }
+
+                goToSlide(index) {
+                    if (this.isAnimating || index === this.currentIndex) return;
+                    this.isAnimating = true;
+
+                    this.currentIndex = index;
+                    this.updateSlidePosition();
+
+                    if (this.isPlaying) {
+                        this.resetAutoPlay();
+                    }
+
+                    setTimeout(() => {
+                        this.isAnimating = false;
+                    }, this.options.transitionSpeed);
+                }
+
+                startAutoPlay() {
+                    if (this.intervalId) {
+                        clearInterval(this.intervalId);
+                    }
+
+                    this.intervalId = setInterval(() => {
+                        this.next();
+                    }, this.options.interval);
+
+                    this.isPlaying = true;
+                    $('#playBtn', this.$container).text('暂停');
+                }
+
+                stopAutoPlay() {
+                    if (this.intervalId) {
+                        clearInterval(this.intervalId);
+                        this.intervalId = null;
+                    }
+
+                    this.isPlaying = false;
+                    $('#playBtn', this.$container).text('播放');
+                }
+
+                resetAutoPlay() {
+                    if (this.isPlaying) {
+                        this.stopAutoPlay();
+                        this.startAutoPlay();
+                    }
+                }
+
+                togglePlayPause() {
+                    if (this.isPlaying) {
+                        this.stopAutoPlay();
+                    } else {
+                        this.startAutoPlay();
+                    }
+                }
+
+                addSlide(slide) {
+                    this.slides.push(slide);
+
+                    const $slide = $(`
+                        <div class="jq-carousel-slide" data-index="${this.slides.length - 1}">
+                            <img src="${slide.image}" alt="${slide.caption}">
+                            <div class="jq-slide-caption">${slide.caption}</div>
+                        </div>
+                    `);
+                    this.$track.append($slide);
+
+                    if (this.options.showDots) {
+                        this.createDots();
+                    }
+
+                    this.updateIndicator();
+                }
+
+                removeCurrentSlide() {
+                    if (this.slides.length <= 1) {
+                        alert('至少需要保留一张图片');
+                        return;
+                    }
+
+                    this.slides.splice(this.currentIndex, 1);
+
+                    if (this.currentIndex >= this.slides.length) {
+                        this.currentIndex = Math.max(0, this.slides.length - 1);
+                    }
+
+                    this.createTrack();
+
+                    if (this.options.showDots) {
+                        this.createDots();
+                    }
+
+                    this.updateIndicator();
+                    this.updateSlidePosition();
+                }
+
+                setupEventListeners() {
+                    const self = this;
+
+                    // 上一张/下一张按钮
+                    $('.jq-carousel-btn.prev', this.$container).on('click', function () {
+                        self.prev();
+                    });
+
+                    $('.jq-carousel-btn.next', this.$container).on('click', function () {
+                        self.next();
+                    });
+
+                    // 指示点点击
+                    this.$container.on('click', '.jq-carousel-dot', function () {
+                        const index = $(this).data('index');
+                        self.goToSlide(index);
+                    });
+
+                    // 播放/暂停按钮
+                    this.$container.on('click', '#playBtn', function () {
+                        self.togglePlayPause();
+                    });
+
+                    // 添加图片按钮
+                    this.$container.on('click', '#addSlideBtn', function () {
+                        const newSlide = {
+                            image: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05',
+                            caption: '新添加的图片 - ' + new Date().toLocaleTimeString()
+                        };
+                        self.addSlide(newSlide);
+                    });
+
+                    // 鼠标悬停暂停
+                    this.$container.hover(
+                        () => {
+                            if (self.isPlaying) {
+                                self.stopAutoPlay();
+                            }
+                        },
+                        () => {
+                            if (self.isPlaying) {
+                                self.startAutoPlay();
+                            }
+                        }
+                    );
+
+                    // 触摸滑动
+                    let startX = 0;
+                    let endX = 0;
+
+                    this.$container.on('touchstart', function (e) {
+                        startX = e.originalEvent.touches[0].clientX;
+                    });
+
+                    this.$container.on('touchmove', function (e) {
+                        endX = e.originalEvent.touches[0].clientX;
+                    });
+
+                    this.$container.on('touchend', function () {
+                        const threshold = 50;
+                        const diff = startX - endX;
+
+                        if (Math.abs(diff) > threshold) {
+                            if (diff > 0) {
+                                self.next();
+                            } else {
+                                self.prev();
+                            }
+                        }
+                    });
+
+                    // 窗口大小改变
+                    $(window).on('resize', () => {
+                        this.updateSlidePosition();
+                    });
+
+                    // 键盘控制
+                    $(document).on('keydown', function (e) {
+                        if (e.key === 'ArrowLeft') {
+                            self.prev();
+                        } else if (e.key === 'ArrowRight') {
+                            self.next();
+                        } else if (e.key === ' ') {
+                            self.togglePlayPause();
+                            e.preventDefault();
+                        }
+                    });
+                }
+            }
+
+            // 初始化jQuery轮播图
+            const jqCarousel = new JQueryCarousel('#jqCarousel', defaultSlides, {
+                autoPlay: true,
+                interval: 3500,
+                loop: true,
+                showDots: true,
+                showNav: true,
+                showIndicator: true,
+                showControls: true,
+                transitionSpeed: 400
+            });
+
+            // 暴露到全局
+            window.jqCarousel = jqCarousel;
+
+            // 演示：5秒后自动添加一张图片
+            setTimeout(() => {
+                const demoSlide = {
+                    image: 'https://images.unsplash.com/photo-1475924156734-496f6cac6ec1',
+                    caption: '自动添加 - 山川河流'
+                };
+                jqCarousel.addSlide(demoSlide);
+            }, 5000);
+        });
+    </script>
+</body>
+
+</html>
