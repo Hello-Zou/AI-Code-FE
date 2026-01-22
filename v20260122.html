@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片懒加载示例</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        .image-container {
+            margin-bottom: 40px;
+        }
+
+        .lazy-image {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 8px;
+            background-color: #e0e0e0;
+            margin-bottom: 15px;
+            display: block;
+            transition: opacity 0.3s ease;
+        }
+
+        .lazy-image.loaded {
+            opacity: 1;
+        }
+
+        .placeholder {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        @keyframes loading {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        .image-info {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="stats">
+        已加载: <span id="loadedCount">0</span> / <span id="totalImages">0</span>
+    </div>
+
+    <div class="container">
+        <h1>图片懒加载演示</h1>
+
+        <div class="image-container" id="imageGallery">
+            <!-- 图片将通过JS动态添加 -->
+        </div>
+
+        <div class="load-more" style="text-align: center; margin-top: 30px;">
+            <button id="loadMoreBtn" style="padding: 10px 20px; font-size: 16px; cursor: pointer;">
+                加载更多图片
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 图片数据
+        const imageData = [
+            {
+                src: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
+                alt: '山脉湖泊',
+                title: '美丽的山脉与湖泊',
+                description: '自然风光的壮丽景色，山脉倒映在清澈的湖水中。'
+            },
+            {
+                src: 'https://images.unsplash.com/photo-1519681393784-d120267933ba',
+                alt: '城市夜景',
+                title: '灯火辉煌的城市夜景',
+                description: '夜晚的城市灯光闪烁，展现出城市的活力与魅力。'
+            },
+            {
+                src: 'https://images.unsplash.com/photo-1518837695005-2083093ee35b',
+                alt: '海滩日落',
+                title: '金色的海滩日落',
+                description: '夕阳西下，金色的阳光洒在海滩上，温暖而宁静。'
+            },
+            {
+                src: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e',
+                alt: '森林迷雾',
+                title: '神秘的森林迷雾',
+                description: '清晨的森林被薄雾笼罩，充满神秘和宁静的气息。'
+            },
+            {
+                src: 'https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07',
+                alt: '乡村田野',
+                title: '宁静的乡村田野',
+                description: '广阔的田野延伸到天边，展现出乡村的宁静与美丽。'
+            },
+            {
+                src: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05',
+                alt: '山川河流',
+                title: '壮丽的山川河流',
+                description: '山川与河流交织，展现出大自然的壮丽景观。'
+            },
+            {
+                src: 'https://images.unsplash.com/photo-1475924156734-496f6cac6ec1',
+                alt: '瀑布景观',
+                title: '壮观的瀑布',
+                description: '水流从高处倾泻而下，形成壮观的瀑布景象。'
+            },
+            {
+                src: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4',
+                alt: '雪山',
+                title: '雄伟的雪山',
+                description: '白雪覆盖的山峰在蓝天下显得格外雄伟壮观。'
+            }
+        ];
+
+        class LazyImageLoader {
+            constructor(containerId, options = {}) {
+                this.container = document.getElementById(containerId);
+                this.options = {
+                    threshold: 0.1,
+                    rootMargin: '50px',
+                    placeholderClass: 'placeholder',
+                    loadedClass: 'loaded',
+                    ...options
+                };
+
+                this.images = [];
+                this.loadedCount = 0;
+                this.totalImages = 0;
+                this.observer = null;
+
+                this.init();
+            }
+
+            init() {
+                this.createImageElements();
+                this.initIntersectionObserver();
+                this.updateStats();
+                this.setupLoadMoreButton();
+            }
+
+            createImageElements() {
+                // 清空容器
+                this.container.innerHTML = '';
+
+                // 创建图片元素
+                imageData.forEach((imgData, index) => {
+                    const imageWrapper = document.createElement('div');
+
+                    // 添加占位符
+                    const placeholder = document.createElement('div');
+                    placeholder.className = this.options.placeholderClass;
+                    imageWrapper.appendChild(placeholder);
+
+                    // 创建实际的img元素（但先不设置src）
+                    const img = document.createElement('img');
+                    img.className = 'lazy-image';
+                    img.alt = imgData.alt;
+                    img.title = imgData.title;
+                    img.dataset.src = imgData.src;
+                    img.dataset.loaded = 'false';
+
+                    // 图片信息
+                    const infoDiv = document.createElement('div');
+                    infoDiv.className = 'image-info';
+                    infoDiv.innerHTML = `
+                        <h3>${imgData.title}</h3>
+                        <p>${imgData.description}</p>
+                        <p><small>图片 ${index + 1}</small></p>
+                    `;
+
+                    imageWrapper.appendChild(img);
+                    imageWrapper.appendChild(infoDiv);
+                    this.container.appendChild(imageWrapper);
+
+                    this.images.push(img);
+                });
+
+                this.totalImages = this.images.length;
+                this.updateTotalStats();
+            }
+
+            initIntersectionObserver() {
+                if ('IntersectionObserver' in window) {
+                    this.observer = new IntersectionObserver(
+                        (entries) => {
+                            entries.forEach(entry => {
+                                if (entry.isIntersecting) {
+                                    this.loadImage(entry.target);
+                                    this.observer.unobserve(entry.target);
+                                }
+                            });
+                        },
+                        {
+                            root: null,
+                            rootMargin: this.options.rootMargin,
+                            threshold: this.options.threshold
+                        }
+                    );
+
+                    // 开始观察所有图片
+                    this.images.forEach(img => {
+                        this.observer.observe(img);
+                    });
+                } else {
+                    // 如果不支持IntersectionObserver，回退到立即加载所有图片
+                    console.log('IntersectionObserver not supported, loading all images immediately');
+                    this.loadAllImages();
+                }
+            }
+
+            loadImage(img) {
+                if (img.dataset.loaded === 'true') return;
+
+                const src = img.dataset.src;
+
+                // 创建新的Image对象预加载
+                const tempImg = new Image();
+                tempImg.onload = () => {
+                    // 预加载完成，设置实际图片
+                    img.src = src;
+                    img.classList.add(this.options.loadedClass);
+                    img.dataset.loaded = 'true';
+
+                    // 移除占位符
+                    const placeholder = img.previousElementSibling;
+                    if (placeholder && placeholder.className.includes('placeholder')) {
+                        placeholder.style.display = 'none';
+                    }
+
+                    this.loadedCount++;
+                    this.updateStats();
+                };
+
+                tempImg.onerror = () => {
+                    console.error(`Failed to load image: ${src}`);
+                    img.dataset.loaded = 'error';
+                    this.loadedCount++;
+                    this.updateStats();
+                };
+
+                tempImg.src = src;
+            }
+
+            loadAllImages() {
+                this.images.forEach(img => {
+                    this.loadImage(img);
+                });
+            }
+
+            loadVisibleImages() {
+                // 检查哪些图片在视口中
+                this.images.forEach(img => {
+                    const rect = img.getBoundingClientRect();
+                    const isVisible = (
+                        rect.top < window.innerHeight &&
+                        rect.bottom > 0
+                    );
+
+                    if (isVisible && img.dataset.loaded === 'false') {
+                        this.loadImage(img);
+                    }
+                });
+            }
+
+            updateStats() {
+                const loadedCountEl = document.getElementById('loadedCount');
+                if (loadedCountEl) {
+                    loadedCountEl.textContent = this.loadedCount;
+                }
+            }
+
+            updateTotalStats() {
+                const totalImagesEl = document.getElementById('totalImages');
+                if (totalImagesEl) {
+                    totalImagesEl.textContent = this.totalImages;
+                }
+            }
+
+            setupLoadMoreButton() {
+                const loadMoreBtn = document.getElementById('loadMoreBtn');
+                if (loadMoreBtn) {
+                    loadMoreBtn.addEventListener('click', () => {
+                        this.addMoreImages();
+                    });
+                }
+            }
+
+            addMoreImages() {
+                // 模拟添加更多图片
+                const newImages = [
+                    {
+                        src: 'https://images.unsplash.com/photo-1475924156734-496f6cac6ec1',
+                        alt: '新增图片1',
+                        title: '新添加的风景',
+                        description: '这是动态加载的新图片。'
+                    },
+                    {
+                        src: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4',
+                        alt: '新增图片2',
+                        title: '另一幅美景',
+                        description: '点击加载更多按钮添加的图片。'
+                    }
+                ];
+
+                newImages.forEach(imgData => {
+                    const imageWrapper = document.createElement('div');
+
+                    const placeholder = document.createElement('div');
+                    placeholder.className = this.options.placeholderClass;
+                    imageWrapper.appendChild(placeholder);
+
+                    const img = document.createElement('img');
+                    img.className = 'lazy-image';
+                    img.alt = imgData.alt;
+                    img.title = imgData.title;
+                    img.dataset.src = imgData.src;
+                    img.dataset.loaded = 'false';
+
+                    const infoDiv = document.createElement('div');
+                    infoDiv.className = 'image-info';
+                    infoDiv.innerHTML = `
+                        <h3>${imgData.title}</h3>
+                        <p>${imgData.description}</p>
+                    `;
+
+                    imageWrapper.appendChild(img);
+                    imageWrapper.appendChild(infoDiv);
+                    this.container.appendChild(imageWrapper);
+
+                    this.images.push(img);
+
+                    // 观察新添加的图片
+                    if (this.observer) {
+                        this.observer.observe(img);
+                    }
+                });
+
+                this.totalImages = this.images.length;
+                this.updateTotalStats();
+
+                // 禁用按钮或修改文本
+                const loadMoreBtn = document.getElementById('loadMoreBtn');
+                loadMoreBtn.textContent = '已加载更多图片';
+                loadMoreBtn.disabled = true;
+            }
+
+            destroy() {
+                if (this.observer) {
+                    this.observer.disconnect();
+                }
+            }
+        }
+
+        // 初始化懒加载
+        document.addEventListener('DOMContentLoaded', () => {
+            const lazyLoader = new LazyImageLoader('imageGallery', {
+                threshold: 0.1,
+                rootMargin: '100px'
+            });
+
+            // 暴露到全局以便调试
+            window.lazyLoader = lazyLoader;
+
+            // 滚动时检查可见图片（备用方案）
+            let scrollTimeout;
+            window.addEventListener('scroll', () => {
+                clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(() => {
+                    lazyLoader.loadVisibleImages();
+                }, 100);
+            });
+        });
+    </script>
+</body>
+
+</html>
