@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模态框组件示例</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            padding: 40px 0;
+        }
+
+        h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            opacity: 0.9;
+            margin-bottom: 40px;
+        }
+
+        .demo-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #444;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .modal-trigger {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-trigger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .modal-trigger.info {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .modal-trigger.success {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .modal-trigger.warning {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .modal-trigger.danger {
+            background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%);
+        }
+
+        .modal-trigger.large {
+            font-size: 18px;
+            padding: 18px;
+        }
+
+        /* 模态框样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+        }
+
+        .modal.large {
+            max-width: 800px;
+        }
+
+        .modal.fullscreen {
+            width: 95%;
+            height: 95%;
+            max-width: none;
+            max-height: none;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 25px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .modal-body {
+            padding: 25px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #555;
+        }
+
+        .modal-footer {
+            padding: 20px 25px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-btn.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .modal-btn.secondary {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .modal-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* 表单模态框样式 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .image-modal .modal-body {
+            padding: 0;
+            max-height: 70vh;
+        }
+
+        .modal-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* 动画效果 */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+        }
+
+        .modal.hiding {
+            animation: slideDown 0.3s ease;
+        }
+
+        .modal-overlay.hiding {
+            animation: fadeIn 0.3s ease reverse;
+        }
+
+        /* 提示组件 */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        .toast {
+            background: white;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideLeft 0.3s ease;
+            max-width: 350px;
+        }
+
+        @keyframes slideLeft {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .toast.success {
+            border-left: 4px solid #43e97b;
+        }
+
+        .toast.error {
+            border-left: 4px solid #ff0844;
+        }
+
+        .toast.warning {
+            border-left: 4px solid #fa709a;
+        }
+
+        .toast.info {
+            border-left: 4px solid #4facfe;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .modal {
+                width: 95%;
+            }
+
+            .button-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-footer {
+                flex-direction: column;
+            }
+
+            .modal-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>模态框组件演示</h1>
+            <p class="subtitle">多种样式和功能的模态框实现</p>
+        </header>
+
+        <div class="demo-section">
+            <h2>基本模态框</h2>
+            <div class="button-grid">
+                <button class="modal-trigger" data-modal="basicModal">基本模态框</button>
+                <button class="modal-trigger info" data-modal="infoModal">信息模态框</button>
+                <button class="modal-trigger success" data-modal="successModal">成功模态框</button>
+                <button class="modal-trigger warning" data-modal="warningModal">警告模态框</button>
+                <button class="modal-trigger danger" data-modal="dangerModal">危险模态框</button>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>高级模态框</h2>
+            <div class="button-grid">
+                <button class="modal-trigger" data-modal="formModal">表单模态框</button>
+                <button class="modal-trigger info" data-modal="imageModal">图片模态框</button>
+                <button class="modal-trigger success large" data-modal="largeModal">大尺寸模态框</button>
+                <button class="modal-trigger warning" data-modal="fullscreenModal">全屏模态框</button>
+                <button class="modal-trigger danger" data-modal="noCloseModal">无关闭按钮</button>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>模态框配置</h2>
+            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <button id="openWithCallback" class="modal-trigger">带回调函数的模态框</button>
+                <button id="multipleModals" class="modal-trigger info">多个模态框叠加</button>
+                <button id="customAnimation" class="modal-trigger success">自定义动画</button>
+                <button id="dynamicContent" class="modal-trigger warning">动态内容</button>
+                <button id="showToast" class="modal-trigger danger">显示提示</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模态框定义 -->
+
+    <!-- 基本模态框 -->
+    <div id="basicModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">基本模态框</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-content">
+                    <p>这是一个基本的模态框示例。模态框用于在当前页面上显示重要信息或表单，而不需要跳转到新页面。</p>
+                    <p>用户可以点击关闭按钮或点击模态框外部区域来关闭它。</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn secondary">取消</button>
+                <button class="modal-btn primary">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 信息模态框 -->
+    <div id="infoModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">提示信息</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-icon">ℹ️</div>
+                <div class="modal-content">
+                    <p>这是一条重要的提示信息。</p>
+                    <p>模态框可以帮助用户专注于当前任务，避免被其他内容干扰。</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn primary">我知道了</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 表单模态框 -->
+    <div id="formModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">用户信息</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-content">
+                    <form id="userForm">
+                        <div class="form-group">
+                            <label class="form-label">姓名</label>
+                            <input type="text" class="form-control" placeholder="请输入您的姓名">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">邮箱</label>
+                            <input type="email" class="form-control" placeholder="请输入您的邮箱">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">消息</label>
+                            <textarea class="form-control" rows="4" placeholder="请输入您的消息"></textarea>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn secondary" type="button">取消</button>
+                <button class="modal-btn primary" type="submit" form="userForm">提交</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图片模态框 -->
+    <div id="imageModal" class="modal-overlay">
+        <div class="modal image-modal">
+            <div class="modal-header">
+                <h3 class="modal-title">图片预览</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb" alt="风景" class="modal-image">
+            </div>
+        </div>
+    </div>
+
+    <!-- 其他模态框占位 -->
+    <div id="successModal" class="modal-overlay"></div>
+    <div id="warningModal" class="modal-overlay"></div>
+    <div id="dangerModal" class="modal-overlay"></div>
+    <div id="largeModal" class="modal-overlay"></div>
+    <div id="fullscreenModal" class="modal-overlay"></div>
+    <div id="noCloseModal" class="modal-overlay"></div>
+
+    <!-- 提示容器 -->
+    <div class="toast-container"></div>
+
+    <script>
+        class ModalManager {
+            constructor() {
+                this.currentModal = null;
+                this.modalStack = [];
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.createMissingModals();
+            }
+
+            setupEventListeners() {
+                // 触发按钮点击事件
+                document.querySelectorAll('.modal-trigger').forEach(trigger => {
+                    trigger.addEventListener('click', (e) => {
+                        const modalId = e.target.dataset.modal;
+                        if (modalId) {
+                            this.open(modalId);
+                        }
+                    });
+                });
+
+                // 动态按钮事件
+                document.getElementById('openWithCallback').addEventListener('click', () => {
+                    this.openWithCallback();
+                });
+
+                document.getElementById('multipleModals').addEventListener('click', () => {
+                    this.showMultipleModals();
+                });
+
+                document.getElementById('customAnimation').addEventListener('click', () => {
+                    this.showCustomAnimation();
+                });
+
+                document.getElementById('dynamicContent').addEventListener('click', () => {
+                    this.showDynamicContent();
+                });
+
+                document.getElementById('showToast').addEventListener('click', () => {
+                    this.showToast('操作成功！', 'success');
+                });
+            }
+
+            createMissingModals() {
+                // 创建缺失的模态框
+                const modalConfigs = {
+                    'successModal': {
+                        title: '操作成功',
+                        content: '您的操作已成功完成！🎉',
+                        type: 'success'
+                    },
+                    'warningModal': {
+                        title: '警告提示',
+                        content: '请注意，此操作可能产生重要影响。',
+                        type: 'warning'
+                    },
+                    'dangerModal': {
+                        title: '危险操作',
+                        content: '此操作无法撤销，请谨慎操作。',
+                        type: 'danger'
+                    },
+                    'largeModal': {
+                        title: '大尺寸模态框',
+                        content: '这是一个大尺寸的模态框，适合显示更多内容。'.repeat(10),
+                        size: 'large'
+                    },
+                    'fullscreenModal': {
+                        title: '全屏模态框',
+                        content: '这是一个全屏模态框，适合展示详细内容。'.repeat(20),
+                        size: 'fullscreen'
+                    },
+                    'noCloseModal': {
+                        title: '无关闭按钮',
+                        content: '这个模态框没有关闭按钮，只能通过确认按钮关闭。',
+                        closable: false
+                    }
+                };
+
+                for (const [id, config] of Object.entries(modalConfigs)) {
+                    const modalEl = document.getElementById(id);
+                    if (modalEl && !modalEl.hasChildNodes()) {
+                        this.createModalElement(id, config);
+                    }
+                }
+            }
+
+            createModalElement(id, config) {
+                const modalEl = document.getElementById(id);
+                const modalType = config.type || 'default';
+                const modalSize = config.size || 'default';
+                const closable = config.closable !== false;
+
+                const iconMap = {
+                    'success': '✅',
+                    'warning': '⚠️',
+                    'danger': '❌',
+                    'info': 'ℹ️',
+                    'default': ''
+                };
+
+                modalEl.innerHTML = `
+                    <div class="modal ${modalSize !== 'default' ? modalSize : ''}">
+                        <div class="modal-header">
+                            <h3 class="modal-title">${config.title}</h3>
+                            ${closable ? '<button class="modal-close">&times;</button>' : ''}
+                        </div>
+                        <div class="modal-body">
+                            ${iconMap[modalType] ? `<div class="modal-icon">${iconMap[modalType]}</div>` : ''}
+                            <div class="modal-content">${config.content}</div>
+                        </div>
+                        <div class="modal-footer">
+                            ${closable ? '<button class="modal-btn secondary">取消</button>' : ''}
+                            <button class="modal-btn primary">确认</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            open(modalId, options = {}) {
+                const modalEl = document.getElementById(modalId);
+                if (!modalEl) {
+                    console.error(`Modal with id "${modalId}" not found`);
+                    return;
+                }
+
+                // 如果已经有打开的模态框，将其推入堆栈
+                if (this.currentModal) {
+                    this.modalStack.push(this.currentModal);
+                    this.hideModal(this.currentModal);
+                }
+
+                this.currentModal = modalEl;
+
+                // 显示模态框
+                modalEl.classList.add('show');
+
+                // 阻止背景滚动
+                document.body.style.overflow = 'hidden';
+
+                // 添加事件监听器
+                this.addModalListeners(modalEl);
+
+                // 自动聚焦第一个可聚焦元素
+                setTimeout(() => {
+                    const focusable = modalEl.querySelector('button, input, textarea, select');
+                    if (focusable) focusable.focus();
+                }, 100);
+
+                // 触发回调
+                if (options.onOpen) {
+                    options.onOpen();
+                }
+            }
+
+            close(modalEl) {
+                if (!modalEl) return;
+
+                modalEl.classList.remove('show');
+                modalEl.classList.add('hiding');
+
+                // 恢复背景滚动
+                document.body.style.overflow = '';
+
+                // 移除动画类
+                setTimeout(() => {
+                    modalEl.classList.remove('hiding');
+
+                    // 从堆栈中取出下一个模态框
+                    if (this.modalStack.length > 0) {
+                        const nextModal = this.modalStack.pop();
+                        this.showModal(nextModal);
+                        this.currentModal = nextModal;
+                    } else {
+                        this.currentModal = null;
+                    }
+                }, 300);
+            }
+
+            hideModal(modalEl) {
+                modalEl.classList.remove('show');
+            }
+
+            showModal(modalEl) {
+                modalEl.classList.add('show');
+            }
+
+            addModalListeners(modalEl) {
+                // 关闭按钮
+                const closeBtn = modalEl.querySelector('.modal-close');
+                if (closeBtn) {
+                    closeBtn.onclick = () => this.close(modalEl);
+                }
+
+                // 点击外部关闭
+                modalEl.onclick = (e) => {
+                    if (e.target === modalEl) {
+                        this.close(modalEl);
+                    }
+                };
+
+                // ESC键关闭
+                const escHandler = (e) => {
+                    if (e.key === 'Escape') {
+                        this.close(modalEl);
+                        document.removeEventListener('keydown', escHandler);
+                    }
+                };
+                document.addEventListener('keydown', escHandler);
+
+                // 模态框关闭时移除事件监听器
+                const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        if (!modalEl.classList.contains('show')) {
+                            document.removeEventListener('keydown', escHandler);
+                            observer.disconnect();
+                        }
+                    });
+                });
+                observer.observe(modalEl, { attributes: true });
+
+                // 确认按钮
+                const confirmBtn = modalEl.querySelector('.modal-btn.primary');
+                if (confirmBtn && !confirmBtn.hasAttribute('data-bound')) {
+                    confirmBtn.setAttribute('data-bound', 'true');
+                    confirmBtn.addEventListener('click', () => {
+                        this.close(modalEl);
+                    });
+                }
+
+                // 取消按钮
+                const cancelBtn = modalEl.querySelector('.modal-btn.secondary');
+                if (cancelBtn && !cancelBtn.hasAttribute('data-bound')) {
+                    cancelBtn.setAttribute('data-bound', 'true');
+                    cancelBtn.addEventListener('click', () => {
+                        this.close(modalEl);
+                    });
+                }
+            }
+
+            openWithCallback() {
+                this.open('basicModal', {
+                    onOpen: () => {
+                        console.log('模态框已打开');
+                        this.showToast('模态框已打开！', 'info');
+                    }
+                });
+            }
+
+            showMultipleModals() {
+                this.open('basicModal');
+                setTimeout(() => this.open('infoModal'), 300);
+                setTimeout(() => this.open('successModal'), 600);
+            }
+
+            showCustomAnimation() {
+                this.open('basicModal');
+                const modal = document.querySelector('#basicModal .modal');
+                modal.style.animation = 'slideUp 0.5s ease';
+            }
+
+            showDynamicContent() {
+                const content = `
+                    <h4>动态加载的内容</h4>
+                    <p>当前时间：${new Date().toLocaleTimeString()}</p>
+                    <p>随机数：${Math.random().toString(36).substr(2, 9)}</p>
+                `;
+
+                // 创建临时模态框
+                const tempModalId = 'dynamicModal';
+                let modalEl = document.getElementById(tempModalId);
+
+                if (!modalEl) {
+                    modalEl = document.createElement('div');
+                    modalEl.id = tempModalId;
+                    modalEl.className = 'modal-overlay';
+                    modalEl.innerHTML = `
+                        <div class="modal">
+                            <div class="modal-header">
+                                <h3 class="modal-title">动态内容</h3>
+                                <button class="modal-close">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="modal-content" id="dynamicContentArea"></div>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="modal-btn primary">确认</button>
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(modalEl);
+                }
+
+                document.getElementById('dynamicContentArea').innerHTML = content;
+                this.open(tempModalId);
+            }
+
+            showToast(message, type = 'info') {
+                const toastContainer = document.querySelector('.toast-container');
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.innerHTML = `
+                    <span>${message}</span>
+                `;
+
+                toastContainer.appendChild(toast);
+
+                // 自动移除
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateX(100%)';
+                    setTimeout(() => {
+                        if (toast.parentNode) {
+                            toast.parentNode.removeChild(toast);
+                        }
+                    }, 300);
+                }, 3000);
+            }
+
+            // 实用方法
+            confirm(message, onConfirm, onCancel) {
+                const modalId = 'confirmModal';
+                let modalEl = document.getElementById(modalId);
+
+                if (!modalEl) {
+                    modalEl = document.createElement('div');
+                    modalEl.id = modalId;
+                    modalEl.className = 'modal-overlay';
+                    document.body.appendChild(modalEl);
+                }
+
+                modalEl.innerHTML = `
+                    <div class="modal">
+                        <div class="modal-header">
+                            <h3 class="modal-title">确认操作</h3>
+                            <button class="modal-close">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="modal-content">${message}</div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="modal-btn secondary" id="confirmCancel">取消</button>
+                            <button class="modal-btn primary" id="confirmOk">确认</button>
+                        </div>
+                    </div>
+                `;
+
+                this.open(modalId);
+
+                // 绑定事件
+                document.getElementById('confirmCancel').onclick = () => {
+                    if (onCancel) onCancel();
+                    this.close(modalEl);
+                };
+
+                document.getElementById('confirmOk').onclick = () => {
+                    if (onConfirm) onConfirm();
+                    this.close(modalEl);
+                };
+            }
+
+            alert(message, type = 'info') {
+                const modalId = 'alertModal';
+                let modalEl = document.getElementById(modalId);
+
+                if (!modalEl) {
+                    modalEl = document.createElement('div');
+                    modalEl.id = modalId;
+                    modalEl.className = 'modal-overlay';
+                    document.body.appendChild(modalEl);
+                }
+
+                const icons = {
+                    'info': 'ℹ️',
+                    'success': '✅',
+                    'warning': '⚠️',
+                    'danger': '❌'
+                };
+
+                modalEl.innerHTML = `
+                    <div class="modal">
+                        <div class="modal-header">
+                            <h3 class="modal-title">提示</h3>
+                            <button class="modal-close">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="modal-icon">${icons[type] || icons.info}</div>
+                            <div class="modal-content">${message}</div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="modal-btn primary">确定</button>
+                        </div>
+                    </div>
+                `;
+
+                this.open(modalId);
+            }
+        }
+
+        // 初始化模态框管理器
+        document.addEventListener('DOMContentLoaded', () => {
+            const modalManager = new ModalManager();
+
+            // 暴露到全局以便调试
+            window.modalManager = modalManager;
+
+            // 演示：3秒后显示欢迎模态框
+            setTimeout(() => {
+                // modalManager.alert('欢迎使用模态框组件！', 'info');
+            }, 1000);
+        });
+    </script>
+</body>
+
+</html>
