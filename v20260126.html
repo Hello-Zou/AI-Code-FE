@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>下拉选择组件示例</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            padding: 40px 0;
+        }
+
+        h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            opacity: 0.9;
+            margin-bottom: 40px;
+        }
+
+        .demo-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #444;
+            border-left: 4px solid #667eea;
+            padding-left: 15px;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .demo-item {
+            padding: 20px;
+            border-radius: 10px;
+            background: #f8f9fa;
+        }
+
+        .demo-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #555;
+        }
+
+        /* 自定义下拉选择器样式 */
+        .custom-select {
+            position: relative;
+            width: 100%;
+        }
+
+        .select-trigger {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .select-trigger:hover {
+            border-color: #667eea;
+        }
+
+        .select-trigger.open {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .select-placeholder {
+            color: #999;
+        }
+
+        .select-value {
+            color: #333;
+        }
+
+        .select-arrow {
+            transition: transform 0.3s ease;
+        }
+
+        .select-arrow.open {
+            transform: rotate(180deg);
+        }
+
+        .select-dropdown {
+            position: absolute;
+            top: calc(100% + 5px);
+            left: 0;
+            width: 100%;
+            max-height: 300px;
+            overflow-y: auto;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+
+        .select-dropdown.open {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .select-search {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .select-options {
+            list-style: none;
+        }
+
+        .select-option {
+            padding: 12px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s ease;
+        }
+
+        .select-option:hover {
+            background: #f5f5f5;
+        }
+
+        .select-option.selected {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .select-option.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .option-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .option-badge {
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-left: auto;
+        }
+
+        .no-results {
+            padding: 20px;
+            text-align: center;
+            color: #999;
+            font-style: italic;
+        }
+
+        .select-footer {
+            padding: 10px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .clear-btn,
+        .confirm-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .clear-btn {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .clear-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .confirm-btn {
+            background: #667eea;
+            color: white;
+        }
+
+        .confirm-btn:hover {
+            background: #5a67d8;
+        }
+
+        /* 多选样式 */
+        .selected-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .selected-tag {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .tag-remove {
+            background: none;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            padding: 2px;
+            font-size: 12px;
+        }
+
+        /* 不同尺寸 */
+        .select-sm .select-trigger {
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+
+        .select-lg .select-trigger {
+            padding: 16px 20px;
+            font-size: 18px;
+        }
+
+        /* 不同样式 */
+        .select-rounded .select-trigger {
+            border-radius: 50px;
+        }
+
+        .select-outline .select-trigger {
+            border: 2px solid transparent;
+            background: #f5f5f5;
+        }
+
+        .select-outline .select-trigger:hover {
+            background: #e0e0e0;
+        }
+
+        .select-outline .select-trigger.open {
+            background: white;
+            border-color: #667eea;
+        }
+
+        /* 分组选项 */
+        .option-group {
+            border-top: 1px solid #eee;
+            padding-top: 5px;
+            margin-top: 5px;
+        }
+
+        .group-label {
+            padding: 8px 16px;
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        /* 显示选中值的区域 */
+        .selected-values {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .values-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        .values-content {
+            font-family: monospace;
+            font-size: 14px;
+            color: #666;
+            word-break: break-all;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .demo-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .select-dropdown {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 90%;
+                max-height: 80vh;
+            }
+
+            .select-dropdown.open {
+                transform: translate(-50%, -50%);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>下拉选择组件演示</h1>
+            <p class="subtitle">自定义下拉选择器，支持单选、多选、搜索等功能</p>
+        </header>
+
+        <div class="demo-section">
+            <h2>基础选择器</h2>
+            <div class="demo-grid">
+                <div class="demo-item">
+                    <div class="demo-title">基本选择器</div>
+                    <div class="custom-select" id="basicSelect"></div>
+                </div>
+
+                <div class="demo-item">
+                    <div class="demo-title">带占位符</div>
+                    <div class="custom-select" id="placeholderSelect"></div>
+                </div>
+
+                <div class="demo-item">
+                    <div class="demo-title">带默认值</div>
+                    <div class="custom-select" id="defaultValueSelect"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>功能选择器</h2>
+            <div class="demo-grid">
+                <div class="demo-item">
+                    <div class="demo-title">可搜索选择器</div>
+                    <div class="custom-select" id="searchableSelect"></div>
+                </div>
+
+                <div class="demo-item">
+                    <div class="demo-title">多选选择器</div>
+                    <div class="custom-select" id="multiSelect"></div>
+                    <div class="selected-tags" id="multiSelectTags"></div>
+                </div>
+
+                <div class="demo-item">
+                    <div class="demo-title">禁用选项</div>
+                    <div class="custom-select" id="disabledSelect"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>高级选择器</h2>
+            <div class="demo-grid">
+                <div class="demo-item">
+                    <div class="demo-title">分组选择器</div>
+                    <div class="custom-select" id="groupedSelect"></div>
+                </div>
+
+                <div class="demo-item">
+                    <div class="demo-title">带图标选项</div>
+                    <div class="custom-select" id="iconSelect"></div>
+                </div>
+
+                <div class="demo-item">
+                    <div class="demo-title">自定义模板</div>
+                    <div class="custom-select" id="customTemplateSelect"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>样式变体</h2>
+            <div class="demo-grid">
+                <div class="demo-item">
+                    <div class="demo-title">小尺寸</div>
+                    <div class="custom-select select-sm" id="smallSelect"></div>
+                </div>
+
+                <div class="demo-item">
+                    <div class="demo-title">大尺寸</div>
+                    <div class="custom-select select-lg" id="largeSelect"></div>
+                </div>
+
+                <div class="demo-item">
+                    <div class="demo-title">圆角样式</div>
+                    <div class="custom-select select-rounded" id="roundedSelect"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>选中值</h2>
+            <div class="selected-values">
+                <div class="values-title">当前选中值：</div>
+                <div class="values-content" id="selectedValues">无</div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>使用示例</h2>
+            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <button id="setValueBtn" class="confirm-btn">设置选中值</button>
+                <button id="getValueBtn" class="confirm-btn">获取选中值</button>
+                <button id="resetBtn" class="clear-btn">重置所有选择器</button>
+                <button id="disableBtn" class="clear-btn">禁用/启用选择器</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 数据源
+        const countries = [
+            { value: 'cn', label: '中国', code: '+86' },
+            { value: 'us', label: '美国', code: '+1' },
+            { value: 'jp', label: '日本', code: '+81' },
+            { value: 'kr', label: '韩国', code: '+82' },
+            { value: 'uk', label: '英国', code: '+44' },
+            { value: 'fr', label: '法国', code: '+33' },
+            { value: 'de', label: '德国', code: '+49' },
+            { value: 'au', label: '澳大利亚', code: '+61' }
+        ];
+
+        const colors = [
+            { value: 'red', label: '红色', color: '#ff4757' },
+            { value: 'blue', label: '蓝色', color: '#3742fa' },
+            { value: 'green', label: '绿色', color: '#2ed573' },
+            { value: 'yellow', label: '黄色', color: '#ffa502' },
+            { value: 'purple', label: '紫色', color: '#7158e2' },
+            { value: 'pink', label: '粉色', color: '#ff6b81' },
+            { value: 'orange', label: '橙色', color: '#ff7f50' }
+        ];
+
+        const programmingLanguages = [
+            {
+                group: '前端', options: [
+                    { value: 'js', label: 'JavaScript', icon: '⚡' },
+                    { value: 'ts', label: 'TypeScript', icon: '📘' },
+                    { value: 'html', label: 'HTML', icon: '🌐' },
+                    { value: 'css', label: 'CSS', icon: '🎨' }
+                ]
+            },
+            {
+                group: '后端', options: [
+                    { value: 'php', label: 'PHP', icon: '🐘' },
+                    { value: 'python', label: 'Python', icon: '🐍' },
+                    { value: 'java', label: 'Java', icon: '☕' },
+                    { value: 'go', label: 'Go', icon: '🚀' }
+                ]
+            },
+            {
+                group: '其他', options: [
+                    { value: 'c', label: 'C语言', icon: '🔧' },
+                    { value: 'cpp', label: 'C++', icon: '⚙️' },
+                    { value: 'rust', label: 'Rust', icon: '🦀' }
+                ]
+            }
+        ];
+
+        class CustomSelect {
+            constructor(container, options = {}) {
+                this.container = typeof container === 'string'
+                    ? document.getElementById(container)
+                    : container;
+
+                this.options = {
+                    placeholder: '请选择...',
+                    searchable: false,
+                    multiple: false,
+                    disabled: false,
+                    clearable: true,
+                    data: [],
+                    value: null,
+                    onChange: null,
+                    onOpen: null,
+                    onClose: null,
+                    renderOption: null,
+                    ...options
+                };
+
+                this.isOpen = false;
+                this.selectedValue = this.options.value;
+                this.selectedValues = this.options.multiple ? (Array.isArray(this.selectedValue) ? this.selectedValue : []) : null;
+                this.filteredData = [];
+
+                this.init();
+            }
+
+            init() {
+                this.createSelectElement();
+                this.renderOptions();
+                this.bindEvents();
+                this.updateDisplay();
+            }
+
+            createSelectElement() {
+                this.container.innerHTML = '';
+                this.container.className = 'custom-select';
+
+                // 创建触发器
+                this.trigger = document.createElement('div');
+                this.trigger.className = 'select-trigger';
+                this.trigger.tabIndex = this.options.disabled ? -1 : 0;
+
+                this.trigger.innerHTML = `
+                    <span class="select-placeholder">${this.options.placeholder}</span>
+                    <span class="select-arrow">▼</span>
+                `;
+
+                // 创建下拉框
+                this.dropdown = document.createElement('div');
+                this.dropdown.className = 'select-dropdown';
+
+                // 搜索框
+                if (this.options.searchable) {
+                    const searchContainer = document.createElement('div');
+                    searchContainer.className = 'select-search';
+                    searchContainer.innerHTML = `
+                        <input type="text" class="search-input" placeholder="搜索...">
+                    `;
+                    this.dropdown.appendChild(searchContainer);
+                }
+
+                // 选项列表
+                this.optionsList = document.createElement('ul');
+                this.optionsList.className = 'select-options';
+                this.dropdown.appendChild(this.optionsList);
+
+                // 底部按钮
+                if (this.options.multiple && this.options.clearable) {
+                    const footer = document.createElement('div');
+                    footer.className = 'select-footer';
+                    footer.innerHTML = `
+                        <button type="button" class="clear-btn">清空</button>
+                        <button type="button" class="confirm-btn">确定</button>
+                    `;
+                    this.dropdown.appendChild(footer);
+                }
+
+                this.container.appendChild(this.trigger);
+                this.container.appendChild(this.dropdown);
+            }
+
+            renderOptions() {
+                this.optionsList.innerHTML = '';
+                this.filteredData = this.getFilteredData();
+
+                if (this.filteredData.length === 0) {
+                    this.optionsList.innerHTML = '<div class="no-results">未找到匹配项</div>';
+                    return;
+                }
+
+                // 检查是否有分组
+                const hasGroups = this.filteredData.some(item => item.group);
+
+                if (hasGroups) {
+                    this.renderGroupedOptions();
+                } else {
+                    this.renderFlatOptions();
+                }
+            }
+
+            renderGroupedOptions() {
+                this.filteredData.forEach(group => {
+                    if (group.options && group.options.length > 0) {
+                        // 组标签
+                        const groupLabel = document.createElement('div');
+                        groupLabel.className = 'group-label';
+                        groupLabel.textContent = group.group;
+                        this.optionsList.appendChild(groupLabel);
+
+                        // 组选项
+                        group.options.forEach(option => {
+                            this.renderOptionItem(option);
+                        });
+
+                        // 组间分隔
+                        const groupSeparator = document.createElement('div');
+                        groupSeparator.className = 'option-group';
+                        this.optionsList.appendChild(groupSeparator);
+                    }
+                });
+            }
+
+            renderFlatOptions() {
+                this.filteredData.forEach(option => {
+                    this.renderOptionItem(option);
+                });
+            }
+
+            renderOptionItem(option) {
+                const li = document.createElement('li');
+                li.className = 'select-option';
+
+                if (option.disabled) {
+                    li.classList.add('disabled');
+                }
+
+                // 检查是否选中
+                const isSelected = this.isSelected(option.value);
+                if (isSelected) {
+                    li.classList.add('selected');
+                }
+
+                // 自定义渲染
+                if (typeof this.options.renderOption === 'function') {
+                    li.innerHTML = this.options.renderOption(option, isSelected);
+                } else {
+                    li.innerHTML = this.getDefaultOptionHTML(option, isSelected);
+                }
+
+                // 点击事件
+                if (!option.disabled) {
+                    li.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.handleOptionClick(option);
+                    });
+                }
+
+                this.optionsList.appendChild(li);
+            }
+
+            getDefaultOptionHTML(option, isSelected) {
+                return `
+                    <div class="option-label">
+                        ${option.icon ? `<span class="option-icon" style="background: ${option.color || '#f5f5f5'}">${option.icon}</span>` : ''}
+                        <span>${option.label}</span>
+                        ${option.badge ? `<span class="option-badge">${option.badge}</span>` : ''}
+                    </div>
+                    ${isSelected ? '<span>✓</span>' : ''}
+                `;
+            }
+
+            getFilteredData() {
+                if (!this.searchValue) {
+                    return this.options.data;
+                }
+
+                const searchTerm = this.searchValue.toLowerCase();
+                const hasGroups = this.options.data.some(item => item.group);
+
+                if (hasGroups) {
+                    return this.options.data.map(group => {
+                        if (!group.options) return group;
+
+                        const filteredOptions = group.options.filter(option =>
+                            option.label.toLowerCase().includes(searchTerm)
+                        );
+
+                        return {
+                            ...group,
+                            options: filteredOptions
+                        };
+                    }).filter(group => !group.options || group.options.length > 0);
+                } else {
+                    return this.options.data.filter(option =>
+                        option.label.toLowerCase().includes(searchTerm)
+                    );
+                }
+            }
+
+            bindEvents() {
+                // 触发器点击
+                this.trigger.addEventListener('click', () => {
+                    if (this.options.disabled) return;
+                    this.toggleDropdown();
+                });
+
+                // 触发器键盘事件
+                this.trigger.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        this.toggleDropdown();
+                    }
+                });
+
+                // 点击外部关闭
+                document.addEventListener('click', (e) => {
+                    if (!this.container.contains(e.target) && this.isOpen) {
+                        this.closeDropdown();
+                    }
+                });
+
+                // 搜索功能
+                if (this.options.searchable) {
+                    const searchInput = this.dropdown.querySelector('.search-input');
+                    searchInput.addEventListener('input', (e) => {
+                        this.searchValue = e.target.value;
+                        this.renderOptions();
+                    });
+
+                    searchInput.addEventListener('keydown', (e) => {
+                        if (e.key === 'Escape') {
+                            this.closeDropdown();
+                        }
+                    });
+                }
+
+                // 多选时的清空和确认按钮
+                if (this.options.multiple) {
+                    const clearBtn = this.dropdown.querySelector('.clear-btn');
+                    const confirmBtn = this.dropdown.querySelector('.confirm-btn');
+
+                    if (clearBtn) {
+                        clearBtn.addEventListener('click', () => {
+                            this.selectedValues = [];
+                            this.updateDisplay();
+                            this.closeDropdown();
+                            this.triggerChange();
+                        });
+                    }
+
+                    if (confirmBtn) {
+                        confirmBtn.addEventListener('click', () => {
+                            this.closeDropdown();
+                        });
+                    }
+                }
+            }
+
+            toggleDropdown() {
+                if (this.isOpen) {
+                    this.closeDropdown();
+                } else {
+                    this.openDropdown();
+                }
+            }
+
+            openDropdown() {
+                if (this.isOpen || this.options.disabled) return;
+
+                this.isOpen = true;
+                this.trigger.classList.add('open');
+                this.dropdown.classList.add('open');
+                this.dropdown.querySelector('.select-arrow')?.classList.add('open');
+
+                // 聚焦搜索框
+                if (this.options.searchable) {
+                    setTimeout(() => {
+                        const searchInput = this.dropdown.querySelector('.search-input');
+                        if (searchInput) searchInput.focus();
+                    }, 100);
+                }
+
+                // 回调
+                if (typeof this.options.onOpen === 'function') {
+                    this.options.onOpen();
+                }
+            }
+
+            closeDropdown() {
+                if (!this.isOpen) return;
+
+                this.isOpen = false;
+                this.trigger.classList.remove('open');
+                this.dropdown.classList.remove('open');
+                this.dropdown.querySelector('.select-arrow')?.classList.remove('open');
+
+                // 清空搜索
+                if (this.options.searchable) {
+                    const searchInput = this.dropdown.querySelector('.search-input');
+                    if (searchInput) {
+                        searchInput.value = '';
+                        this.searchValue = '';
+                    }
+                    this.renderOptions();
+                }
+
+                // 回调
+                if (typeof this.options.onClose === 'function') {
+                    this.options.onClose();
+                }
+            }
+
+            handleOptionClick(option) {
+                if (this.options.multiple) {
+                    this.toggleMultiSelect(option.value);
+                } else {
+                    this.selectSingle(option.value);
+                    this.closeDropdown();
+                }
+
+                this.updateDisplay();
+                this.triggerChange();
+            }
+
+            selectSingle(value) {
+                this.selectedValue = value;
+                this.updateDisplay();
+            }
+
+            toggleMultiSelect(value) {
+                const index = this.selectedValues.indexOf(value);
+                if (index === -1) {
+                    this.selectedValues.push(value);
+                } else {
+                    this.selectedValues.splice(index, 1);
+                }
+                this.renderOptions();
+            }
+
+            isSelected(value) {
+                if (this.options.multiple) {
+                    return this.selectedValues.includes(value);
+                } else {
+                    return this.selectedValue === value;
+                }
+            }
+
+            updateDisplay() {
+                const placeholder = this.trigger.querySelector('.select-placeholder');
+                const valueDisplay = this.trigger.querySelector('.select-value');
+
+                if (this.options.multiple) {
+                    if (this.selectedValues.length === 0) {
+                        placeholder.style.display = 'block';
+                        placeholder.textContent = this.options.placeholder;
+                        if (valueDisplay) valueDisplay.remove();
+                    } else {
+                        placeholder.style.display = 'none';
+
+                        const selectedLabels = this.selectedValues.map(val => {
+                            const option = this.findOptionByValue(val);
+                            return option?.label || val;
+                        });
+
+                        if (!valueDisplay) {
+                            const valueSpan = document.createElement('span');
+                            valueSpan.className = 'select-value';
+                            this.trigger.insertBefore(valueSpan, this.trigger.querySelector('.select-arrow'));
+                        }
+
+                        this.trigger.querySelector('.select-value').textContent = selectedLabels.join(', ');
+                    }
+                } else {
+                    if (!this.selectedValue) {
+                        placeholder.style.display = 'block';
+                        placeholder.textContent = this.options.placeholder;
+                        if (valueDisplay) valueDisplay.remove();
+                    } else {
+                        placeholder.style.display = 'none';
+                        const option = this.findOptionByValue(this.selectedValue);
+
+                        if (!valueDisplay) {
+                            const valueSpan = document.createElement('span');
+                            valueSpan.className = 'select-value';
+                            this.trigger.insertBefore(valueSpan, this.trigger.querySelector('.select-arrow'));
+                        }
+
+                        this.trigger.querySelector('.select-value').textContent = option?.label || this.selectedValue;
+                    }
+                }
+
+                // 更新多选标签显示
+                if (this.options.multiple) {
+                    this.updateMultiSelectTags();
+                }
+            }
+
+            updateMultiSelectTags() {
+                const tagsContainer = document.getElementById('multiSelectTags');
+                if (!tagsContainer) return;
+
+                tagsContainer.innerHTML = '';
+
+                this.selectedValues.forEach(value => {
+                    const option = this.findOptionByValue(value);
+                    if (option) {
+                        const tag = document.createElement('div');
+                        tag.className = 'selected-tag';
+                        tag.innerHTML = `
+                            ${option.label}
+                            <button class="tag-remove" data-value="${value}">×</button>
+                        `;
+                        tagsContainer.appendChild(tag);
+
+                        // 移除标签事件
+                        tag.querySelector('.tag-remove').addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            this.toggleMultiSelect(value);
+                            this.updateDisplay();
+                            this.triggerChange();
+                        });
+                    }
+                });
+            }
+
+            findOptionByValue(value) {
+                const findInArray = (arr) => {
+                    return arr.find(option => option.value === value);
+                };
+
+                // 检查是否有分组
+                const hasGroups = this.options.data.some(item => item.group);
+
+                if (hasGroups) {
+                    for (const group of this.options.data) {
+                        if (group.options) {
+                            const found = findInArray(group.options);
+                            if (found) return found;
+                        }
+                    }
+                } else {
+                    return findInArray(this.options.data);
+                }
+
+                return null;
+            }
+
+            triggerChange() {
+                if (typeof this.options.onChange === 'function') {
+                    const value = this.options.multiple ? this.selectedValues : this.selectedValue;
+                    this.options.onChange(value);
+                }
+            }
+
+            // 公共API
+            getValue() {
+                return this.options.multiple ? this.selectedValues : this.selectedValue;
+            }
+
+            setValue(value) {
+                if (this.options.multiple) {
+                    if (Array.isArray(value)) {
+                        this.selectedValues = value;
+                    } else {
+                        this.selectedValues = value ? [value] : [];
+                    }
+                } else {
+                    this.selectedValue = value;
+                }
+
+                this.updateDisplay();
+                this.renderOptions();
+            }
+
+            clear() {
+                if (this.options.multiple) {
+                    this.selectedValues = [];
+                } else {
+                    this.selectedValue = null;
+                }
+
+                this.updateDisplay();
+                this.renderOptions();
+                this.triggerChange();
+            }
+
+            enable() {
+                this.options.disabled = false;
+                this.trigger.tabIndex = 0;
+                this.container.classList.remove('disabled');
+            }
+
+            disable() {
+                this.options.disabled = true;
+                this.trigger.tabIndex = -1;
+                this.container.classList.add('disabled');
+                this.closeDropdown();
+            }
+
+            destroy() {
+                // 清理事件监听器等
+                this.container.innerHTML = '';
+            }
+        }
+
+        // 创建各种选择器实例
+        let selectInstances = {};
+
+        function initSelectors() {
+            // 基本选择器
+            selectInstances.basic = new CustomSelect('basicSelect', {
+                data: countries.map(c => ({ value: c.value, label: c.label })),
+                placeholder: '选择国家',
+                onChange: updateSelectedValues
+            });
+
+            // 带占位符
+            selectInstances.placeholder = new CustomSelect('placeholderSelect', {
+                data: countries.map(c => ({ value: c.value, label: c.label })),
+                placeholder: '请选择一个国家...',
+                onChange: updateSelectedValues
+            });
+
+            // 带默认值
+            selectInstances.defaultValue = new CustomSelect('defaultValueSelect', {
+                data: countries.map(c => ({ value: c.value, label: c.label })),
+                placeholder: '选择国家',
+                value: 'us',
+                onChange: updateSelectedValues
+            });
+
+            // 可搜索选择器
+            selectInstances.searchable = new CustomSelect('searchableSelect', {
+                data: countries.map(c => ({ value: c.value, label: c.label })),
+                placeholder: '搜索并选择国家',
+                searchable: true,
+                onChange: updateSelectedValues
+            });
+
+            // 多选选择器
+            selectInstances.multi = new CustomSelect('multiSelect', {
+                data: colors.map(c => ({ value: c.value, label: c.label, color: c.color })),
+                placeholder: '选择颜色（可多选）',
+                multiple: true,
+                onChange: updateSelectedValues
+            });
+
+            // 禁用选项
+            const disabledData = countries.map((c, index) => ({
+                value: c.value,
+                label: c.label,
+                disabled: index % 3 === 0 // 每三个禁用一个
+            }));
+            selectInstances.disabled = new CustomSelect('disabledSelect', {
+                data: disabledData,
+                placeholder: '选择国家（部分禁用）',
+                onChange: updateSelectedValues
+            });
+
+            // 分组选择器
+            selectInstances.grouped = new CustomSelect('groupedSelect', {
+                data: programmingLanguages,
+                placeholder: '选择编程语言',
+                onChange: updateSelectedValues
+            });
+
+            // 带图标选项
+            selectInstances.icon = new CustomSelect('iconSelect', {
+                data: programmingLanguages.flatMap(g => g.options),
+                placeholder: '选择编程语言',
+                onChange: updateSelectedValues
+            });
+
+            // 自定义模板
+            selectInstances.customTemplate = new CustomSelect('customTemplateSelect', {
+                data: countries,
+                placeholder: '选择国家',
+                renderOption: (option, selected) => `
+                    <div class="option-label">
+                        <span style="font-weight: bold;">${option.label}</span>
+                        <span style="color: #666; font-size: 12px;">${option.code}</span>
+                    </div>
+                    ${selected ? '<span style="color: #667eea;">✓</span>' : ''}
+                `,
+                onChange: updateSelectedValues
+            });
+
+            // 样式变体
+            selectInstances.small = new CustomSelect('smallSelect', {
+                data: countries.slice(0, 4).map(c => ({ value: c.value, label: c.label })),
+                placeholder: '小尺寸',
+                onChange: updateSelectedValues
+            });
+
+            selectInstances.large = new CustomSelect('largeSelect', {
+                data: countries.slice(0, 4).map(c => ({ value: c.value, label: c.label })),
+                placeholder: '大尺寸',
+                onChange: updateSelectedValues
+            });
+
+            selectInstances.rounded = new CustomSelect('roundedSelect', {
+                data: countries.slice(0, 4).map(c => ({ value: c.value, label: c.label })),
+                placeholder: '圆角样式',
+                onChange: updateSelectedValues
+            });
+        }
+
+        function updateSelectedValues() {
+            const values = {};
+            for (const [key, instance] of Object.entries(selectInstances)) {
+                values[key] = instance.getValue();
+            }
+
+            document.getElementById('selectedValues').textContent = JSON.stringify(values, null, 2);
+        }
+
+        function setupDemoControls() {
+            document.getElementById('setValueBtn').addEventListener('click', () => {
+                selectInstances.basic.setValue('cn');
+                selectInstances.multi.setValue(['red', 'blue']);
+                updateSelectedValues();
+            });
+
+            document.getElementById('getValueBtn').addEventListener('click', () => {
+                const basicValue = selectInstances.basic.getValue();
+                const multiValue = selectInstances.multi.getValue();
+                alert(`基本选择器: ${basicValue}\n多选选择器: ${JSON.stringify(multiValue)}`);
+            });
+
+            document.getElementById('resetBtn').addEventListener('click', () => {
+                for (const instance of Object.values(selectInstances)) {
+                    instance.clear();
+                }
+                updateSelectedValues();
+            });
+
+            document.getElementById('disableBtn').addEventListener('click', () => {
+                const isDisabled = selectInstances.basic.options.disabled;
+                for (const instance of Object.values(selectInstances)) {
+                    if (isDisabled) {
+                        instance.enable();
+                    } else {
+                        instance.disable();
+                    }
+                }
+                document.getElementById('disableBtn').textContent =
+                    isDisabled ? '禁用所有选择器' : '启用所有选择器';
+            });
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            initSelectors();
+            setupDemoControls();
+            updateSelectedValues();
+
+            // 暴露到全局以便调试
+            window.selectInstances = selectInstances;
+        });
+    </script>
+</body>
+
+</html>
