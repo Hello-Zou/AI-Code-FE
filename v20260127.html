@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日期选择器演示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            padding: 30px 0;
+        }
+
+        h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .demo-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            font-size: 24px;
+            margin-bottom: 25px;
+            color: #444;
+            border-left: 4px solid #667eea;
+            padding-left: 15px;
+        }
+
+        /* 日期选择器样式 */
+        .date-picker {
+            position: relative;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .date-input {
+            width: 100%;
+            padding: 14px 45px 14px 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .date-input:hover {
+            border-color: #667eea;
+        }
+
+        .date-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .date-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #667eea;
+            pointer-events: none;
+        }
+
+        .calendar-container {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 320px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            margin-top: 5px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s;
+        }
+
+        .calendar-container.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #667eea;
+            color: white;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .calendar-nav {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .calendar-nav:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .calendar-title {
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            padding: 10px 0;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
+        }
+
+        .weekday {
+            text-align: center;
+            font-weight: 600;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            padding: 15px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .calendar-day:hover {
+            background: #f0f2ff;
+        }
+
+        .calendar-day.other-month {
+            color: #ccc;
+        }
+
+        .calendar-day.today {
+            background: #e3f2fd;
+            color: #1976d2;
+            font-weight: 600;
+        }
+
+        .calendar-day.selected {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        .calendar-day.disabled {
+            color: #ddd;
+            cursor: not-allowed;
+        }
+
+        .calendar-day.disabled:hover {
+            background: transparent;
+        }
+
+        .calendar-footer {
+            padding: 15px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .today-btn,
+        .clear-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .today-btn {
+            background: #f0f2ff;
+            color: #667eea;
+        }
+
+        .today-btn:hover {
+            background: #e4e7ff;
+        }
+
+        .clear-btn {
+            background: #f8f9fa;
+            color: #666;
+        }
+
+        .clear-btn:hover {
+            background: #e9ecef;
+        }
+
+        /* 日期范围选择器 */
+        .date-range-picker {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .date-range-separator {
+            color: #666;
+            font-weight: bold;
+        }
+
+        /* 时间选择器 */
+        .time-picker {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .time-input {
+            width: 70px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .time-separator {
+            font-size: 18px;
+            font-weight: bold;
+            color: #666;
+        }
+
+        /* 快速选择按钮 */
+        .quick-select {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .quick-btn {
+            padding: 8px 15px;
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .quick-btn:hover {
+            background: #e9ecef;
+            border-color: #667eea;
+        }
+
+        /* 结果展示 */
+        .result-box {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .result-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .result-content {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #666;
+            word-break: break-all;
+        }
+
+        /* 控制按钮 */
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .control-btn {
+            padding: 12px 25px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .control-btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        .control-btn.secondary {
+            background: #f8f9fa;
+            color: #333;
+        }
+
+        .control-btn.secondary:hover {
+            background: #e9ecef;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .date-range-picker {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .calendar-container {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 90%;
+                max-width: 320px;
+            }
+
+            .calendar-container.show {
+                transform: translate(-50%, -50%);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>日期选择器演示</h1>
+            <p class="subtitle">简单易用的日期选择组件</p>
+        </header>
+
+        <div class="demo-card">
+            <h2>基本日期选择器</h2>
+            <div class="date-picker" id="datePicker">
+                <input type="text" class="date-input" placeholder="选择日期" readonly>
+                <span class="date-icon">📅</span>
+                <div class="calendar-container" id="calendar"></div>
+            </div>
+        </div>
+
+        <div class="demo-card">
+            <h2>日期范围选择器</h2>
+            <div class="date-range-picker">
+                <div class="date-picker" id="startDatePicker">
+                    <input type="text" class="date-input" placeholder="开始日期" readonly>
+                    <span class="date-icon">📅</span>
+                    <div class="calendar-container" id="startCalendar"></div>
+                </div>
+                <span class="date-range-separator">至</span>
+                <div class="date-picker" id="endDatePicker">
+                    <input type="text" class="date-input" placeholder="结束日期" readonly>
+                    <span class="date-icon">📅</span>
+                    <div class="calendar-container" id="endCalendar"></div>
+                </div>
+            </div>
+
+            <div class="quick-select">
+                <button class="quick-btn" data-range="today">今天</button>
+                <button class="quick-btn" data-range="yesterday">昨天</button>
+                <button class="quick-btn" data-range="thisWeek">本周</button>
+                <button class="quick-btn" data-range="lastWeek">上周</button>
+                <button class="quick-btn" data-range="thisMonth">本月</button>
+                <button class="quick-btn" data-range="lastMonth">上月</button>
+                <button class="quick-btn" data-range="thisYear">今年</button>
+            </div>
+        </div>
+
+        <div class="demo-card">
+            <h2>日期时间选择器</h2>
+            <div class="date-picker" id="datetimePicker">
+                <input type="text" class="date-input" placeholder="选择日期时间" readonly>
+                <span class="date-icon">⏰</span>
+                <div class="calendar-container" id="datetimeCalendar"></div>
+            </div>
+
+            <div class="time-picker" id="timePicker" style="margin-top: 15px; display: none;">
+                <input type="number" class="time-input" id="hourInput" min="0" max="23" placeholder="时">
+                <span class="time-separator">:</span>
+                <input type="number" class="time-input" id="minuteInput" min="0" max="59" placeholder="分">
+                <select class="time-input" id="ampmSelect" style="width: 80px;">
+                    <option value="AM">AM</option>
+                    <option value="PM">PM</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="result-box">
+            <div class="result-title">当前选择：</div>
+            <div class="result-content" id="resultContent">无</div>
+        </div>
+
+        <div class="controls">
+            <button class="control-btn" id="getDateBtn">获取选中日期</button>
+            <button class="control-btn" id="setDateBtn">设置为今天</button>
+            <button class="control-btn" id="clearDateBtn">清空日期</button>
+            <button class="control-btn secondary" id="disableBtn">禁用/启用</button>
+        </div>
+    </div>
+
+    <script>
+        class DatePicker {
+            constructor(containerId, options = {}) {
+                this.container = document.getElementById(containerId);
+                this.input = this.container.querySelector('.date-input');
+                this.calendar = this.container.querySelector('.calendar-container');
+
+                this.options = {
+                    format: 'YYYY-MM-DD',
+                    minDate: null,
+                    maxDate: null,
+                    showTime: false,
+                    timeFormat: '24h',
+                    onChange: null,
+                    ...options
+                };
+
+                this.currentDate = new Date();
+                this.selectedDate = null;
+                this.showingDate = new Date();
+                this.isOpen = false;
+
+                this.init();
+            }
+
+            init() {
+                this.renderCalendar();
+                this.bindEvents();
+            }
+
+            bindEvents() {
+                // 输入框点击打开日历
+                this.input.addEventListener('click', () => {
+                    this.toggleCalendar();
+                });
+
+                // 点击外部关闭日历
+                document.addEventListener('click', (e) => {
+                    if (!this.container.contains(e.target) && this.isOpen) {
+                        this.closeCalendar();
+                    }
+                });
+            }
+
+            toggleCalendar() {
+                if (this.isOpen) {
+                    this.closeCalendar();
+                } else {
+                    this.openCalendar();
+                }
+            }
+
+            openCalendar() {
+                this.isOpen = true;
+                this.calendar.classList.add('show');
+                this.renderCalendar();
+            }
+
+            closeCalendar() {
+                this.isOpen = false;
+                this.calendar.classList.remove('show');
+            }
+
+            renderCalendar() {
+                const year = this.showingDate.getFullYear();
+                const month = this.showingDate.getMonth();
+
+                // 日历标题
+                const monthNames = [
+                    '一月', '二月', '三月', '四月', '五月', '六月',
+                    '七月', '八月', '九月', '十月', '十一月', '十二月'
+                ];
+
+                const calendarHTML = `
+                    <div class="calendar-header">
+                        <button class="calendar-nav prev-year" data-change="year" data-dir="-1">«</button>
+                        <button class="calendar-nav prev-month" data-change="month" data-dir="-1">‹</button>
+                        <div class="calendar-title">${year}年 ${monthNames[month]}</div>
+                        <button class="calendar-nav next-month" data-change="month" data-dir="1">›</button>
+                        <button class="calendar-nav next-year" data-change="year" data-dir="1">»</button>
+                    </div>
+                    <div class="calendar-weekdays">
+                        <div class="weekday">日</div>
+                        <div class="weekday">一</div>
+                        <div class="weekday">二</div>
+                        <div class="weekday">三</div>
+                        <div class="weekday">四</div>
+                        <div class="weekday">五</div>
+                        <div class="weekday">六</div>
+                    </div>
+                    <div class="calendar-days" id="calendarDays">
+                        ${this.generateCalendarDays(year, month)}
+                    </div>
+                    <div class="calendar-footer">
+                        <button class="today-btn">今天</button>
+                        <button class="clear-btn">清空</button>
+                    </div>
+                `;
+
+                this.calendar.innerHTML = calendarHTML;
+
+                // 绑定日历事件
+                this.bindCalendarEvents();
+            }
+
+            generateCalendarDays(year, month) {
+                // 获取当月第一天和最后一天
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+
+                // 获取第一天是星期几（0-6，0是周日）
+                const firstDayWeekday = firstDay.getDay();
+
+                // 获取上个月的最后一天
+                const prevMonthLastDay = new Date(year, month, 0).getDate();
+
+                // 计算总天数（包括前后月份的空格）
+                const totalDays = 42; // 6行 * 7天
+
+                let html = '';
+                const today = new Date();
+
+                for (let i = 0; i < totalDays; i++) {
+                    let day, date, isCurrentMonth, isToday, isSelected, isDisabled;
+
+                    if (i < firstDayWeekday) {
+                        // 上个月的日期
+                        day = prevMonthLastDay - (firstDayWeekday - i - 1);
+                        date = new Date(year, month - 1, day);
+                        isCurrentMonth = false;
+                    } else if (i >= firstDayWeekday && i < firstDayWeekday + lastDay.getDate()) {
+                        // 当前月的日期
+                        day = i - firstDayWeekday + 1;
+                        date = new Date(year, month, day);
+                        isCurrentMonth = true;
+                    } else {
+                        // 下个月的日期
+                        day = i - firstDayWeekday - lastDay.getDate() + 1;
+                        date = new Date(year, month + 1, day);
+                        isCurrentMonth = false;
+                    }
+
+                    // 检查是否是今天
+                    isToday = date.getDate() === today.getDate() &&
+                        date.getMonth() === today.getMonth() &&
+                        date.getFullYear() === today.getFullYear();
+
+                    // 检查是否被选中
+                    isSelected = this.selectedDate &&
+                        date.getDate() === this.selectedDate.getDate() &&
+                        date.getMonth() === this.selectedDate.getMonth() &&
+                        date.getFullYear() === this.selectedDate.getFullYear();
+
+                    // 检查是否禁用
+                    isDisabled = this.isDateDisabled(date);
+
+                    let className = 'calendar-day';
+                    if (!isCurrentMonth) className += ' other-month';
+                    if (isToday) className += ' today';
+                    if (isSelected) className += ' selected';
+                    if (isDisabled) className += ' disabled';
+
+                    html += `<div class="${className}" data-date="${date.toISOString()}" ${isDisabled ? 'disabled' : ''}>${day}</div>`;
+                }
+
+                return html;
+            }
+
+            isDateDisabled(date) {
+                if (this.options.minDate && date < this.options.minDate) {
+                    return true;
+                }
+                if (this.options.maxDate && date > this.options.maxDate) {
+                    return true;
+                }
+                return false;
+            }
+
+            bindCalendarEvents() {
+                // 月份/年份导航
+                this.calendar.querySelectorAll('.calendar-nav').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const change = e.target.dataset.change;
+                        const dir = parseInt(e.target.dataset.dir);
+
+                        if (change === 'month') {
+                            this.showingDate.setMonth(this.showingDate.getMonth() + dir);
+                        } else if (change === 'year') {
+                            this.showingDate.setFullYear(this.showingDate.getFullYear() + dir);
+                        }
+
+                        this.renderCalendar();
+                    });
+                });
+
+                // 日期点击
+                this.calendar.querySelectorAll('.calendar-day:not(.disabled)').forEach(day => {
+                    day.addEventListener('click', (e) => {
+                        const dateStr = e.target.dataset.date;
+                        const date = new Date(dateStr);
+                        this.selectDate(date);
+                        this.closeCalendar();
+                    });
+                });
+
+                // 今天按钮
+                this.calendar.querySelector('.today-btn').addEventListener('click', () => {
+                    this.selectDate(new Date());
+                    this.closeCalendar();
+                });
+
+                // 清空按钮
+                this.calendar.querySelector('.clear-btn').addEventListener('click', () => {
+                    this.clearDate();
+                    this.closeCalendar();
+                });
+            }
+
+            selectDate(date) {
+                this.selectedDate = date;
+                this.showingDate = new Date(date);
+                this.updateInput();
+                this.renderCalendar();
+
+                // 回调函数
+                if (typeof this.options.onChange === 'function') {
+                    this.options.onChange(this.getFormattedDate());
+                }
+            }
+
+            clearDate() {
+                this.selectedDate = null;
+                this.input.value = '';
+                this.input.placeholder = '选择日期';
+
+                // 回调函数
+                if (typeof this.options.onChange === 'function') {
+                    this.options.onChange(null);
+                }
+            }
+
+            updateInput() {
+                if (this.selectedDate) {
+                    this.input.value = this.formatDate(this.selectedDate);
+                }
+            }
+
+            formatDate(date) {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+
+                return `${year}-${month}-${day}`;
+            }
+
+            getFormattedDate() {
+                return this.selectedDate ? this.formatDate(this.selectedDate) : null;
+            }
+
+            setDate(dateString) {
+                const date = new Date(dateString);
+                if (!isNaN(date.getTime())) {
+                    this.selectDate(date);
+                }
+            }
+
+            getDate() {
+                return this.selectedDate;
+            }
+
+            enable() {
+                this.input.disabled = false;
+                this.input.style.opacity = '1';
+            }
+
+            disable() {
+                this.input.disabled = true;
+                this.input.style.opacity = '0.6';
+                this.closeCalendar();
+            }
+        }
+
+        // 初始化日期选择器
+        let datePickers = {};
+
+        function initDatePickers() {
+            // 基本日期选择器
+            datePickers.basic = new DatePicker('datePicker', {
+                onChange: updateResult
+            });
+
+            // 开始日期选择器
+            datePickers.start = new DatePicker('startDatePicker', {
+                onChange: (date) => {
+                    updateResult();
+                    // 设置结束日期的最小日期
+                    if (date) {
+                        const minDate = new Date(date);
+                        datePickers.end.options.minDate = minDate;
+                        datePickers.end.renderCalendar();
+                    }
+                }
+            });
+
+            // 结束日期选择器
+            datePickers.end = new DatePicker('endDatePicker', {
+                onChange: (date) => {
+                    updateResult();
+                    // 设置开始日期的最大日期
+                    if (date) {
+                        const maxDate = new Date(date);
+                        datePickers.start.options.maxDate = maxDate;
+                        datePickers.start.renderCalendar();
+                    }
+                }
+            });
+
+            // 日期时间选择器
+            datePickers.datetime = new DatePicker('datetimePicker', {
+                onChange: updateResult
+            });
+
+            // 时间选择器组件
+            setupTimePicker();
+        }
+
+        function setupTimePicker() {
+            const timeContainer = document.getElementById('timePicker');
+            const hourInput = document.getElementById('hourInput');
+            const minuteInput = document.getElementById('minuteInput');
+            const ampmSelect = document.getElementById('ampmSelect');
+
+            // 时间输入验证
+            hourInput.addEventListener('change', () => {
+                let hour = parseInt(hourInput.value) || 0;
+                if (hour < 0) hour = 0;
+                if (hour > 23) hour = 23;
+                hourInput.value = hour.toString().padStart(2, '0');
+                updateResult();
+            });
+
+            minuteInput.addEventListener('change', () => {
+                let minute = parseInt(minuteInput.value) || 0;
+                if (minute < 0) minute = 0;
+                if (minute > 59) minute = 59;
+                minuteInput.value = minute.toString().padStart(2, '0');
+                updateResult();
+            });
+
+            ampmSelect.addEventListener('change', () => {
+                updateResult();
+            });
+
+            // 当时选择器显示时，显示时间选择
+            datePickers.datetime.container.addEventListener('click', () => {
+                setTimeout(() => {
+                    timeContainer.style.display = 'flex';
+                }, 100);
+            });
+        }
+
+        function updateResult() {
+            const result = {
+                basic: datePickers.basic.getFormattedDate(),
+                start: datePickers.start.getFormattedDate(),
+                end: datePickers.end.getFormattedDate(),
+                datetime: datePickers.datetime.getFormattedDate()
+            };
+
+            // 添加时间信息
+            const hour = document.getElementById('hourInput').value;
+            const minute = document.getElementById('minuteInput').value;
+            const ampm = document.getElementById('ampmSelect').value;
+
+            if (hour && minute) {
+                result.time = `${hour}:${minute} ${ampm}`;
+            }
+
+            document.getElementById('resultContent').textContent = JSON.stringify(result, null, 2);
+        }
+
+        function setupControls() {
+            // 获取日期按钮
+            document.getElementById('getDateBtn').addEventListener('click', () => {
+                const basicDate = datePickers.basic.getFormattedDate();
+                const startDate = datePickers.start.getFormattedDate();
+                const endDate = datePickers.end.getFormattedDate();
+
+                alert(`基本日期: ${basicDate || '未选择'}\n开始日期: ${startDate || '未选择'}\n结束日期: ${endDate || '未选择'}`);
+            });
+
+            // 设置为今天按钮
+            document.getElementById('setDateBtn').addEventListener('click', () => {
+                const today = new Date().toISOString().split('T')[0];
+                datePickers.basic.setDate(today);
+                datePickers.start.setDate(today);
+                datePickers.end.setDate(today);
+                datePickers.datetime.setDate(today);
+
+                // 设置时间为当前时间
+                const now = new Date();
+                document.getElementById('hourInput').value = now.getHours().toString().padStart(2, '0');
+                document.getElementById('minuteInput').value = now.getMinutes().toString().padStart(2, '0');
+                document.getElementById('ampmSelect').value = now.getHours() >= 12 ? 'PM' : 'AM';
+
+                updateResult();
+            });
+
+            // 清空日期按钮
+            document.getElementById('clearDateBtn').addEventListener('click', () => {
+                datePickers.basic.clearDate();
+                datePickers.start.clearDate();
+                datePickers.end.clearDate();
+                datePickers.datetime.clearDate();
+
+                // 清空时间
+                document.getElementById('hourInput').value = '';
+                document.getElementById('minuteInput').value = '';
+
+                updateResult();
+            });
+
+            // 禁用/启用按钮
+            let isDisabled = false;
+            document.getElementById('disableBtn').addEventListener('click', () => {
+                isDisabled = !isDisabled;
+
+                if (isDisabled) {
+                    datePickers.basic.disable();
+                    datePickers.start.disable();
+                    datePickers.end.disable();
+                    datePickers.datetime.disable();
+                    document.getElementById('disableBtn').textContent = '启用所有';
+                } else {
+                    datePickers.basic.enable();
+                    datePickers.start.enable();
+                    datePickers.end.enable();
+                    datePickers.datetime.enable();
+                    document.getElementById('disableBtn').textContent = '禁用所有';
+                }
+            });
+
+            // 快速选择按钮
+            document.querySelectorAll('.quick-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const range = btn.dataset.range;
+                    const today = new Date();
+
+                    let startDate = new Date();
+                    let endDate = new Date();
+
+                    switch (range) {
+                        case 'today':
+                            startDate = new Date(today);
+                            endDate = new Date(today);
+                            break;
+                        case 'yesterday':
+                            startDate = new Date(today);
+                            startDate.setDate(today.getDate() - 1);
+                            endDate = new Date(startDate);
+                            break;
+                        case 'thisWeek':
+                            startDate = new Date(today);
+                            startDate.setDate(today.getDate() - today.getDay());
+                            endDate = new Date(startDate);
+                            endDate.setDate(startDate.getDate() + 6);
+                            break;
+                        case 'lastWeek':
+                            startDate = new Date(today);
+                            startDate.setDate(today.getDate() - today.getDay() - 7);
+                            endDate = new Date(startDate);
+                            endDate.setDate(startDate.getDate() + 6);
+                            break;
+                        case 'thisMonth':
+                            startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                            endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                            break;
+                        case 'lastMonth':
+                            startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                            endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+                            break;
+                        case 'thisYear':
+                            startDate = new Date(today.getFullYear(), 0, 1);
+                            endDate = new Date(today.getFullYear(), 11, 31);
+                            break;
+                    }
+
+                    datePickers.start.setDate(startDate.toISOString().split('T')[0]);
+                    datePickers.end.setDate(endDate.toISOString().split('T')[0]);
+                    updateResult();
+                });
+            });
+        }
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            initDatePickers();
+            setupControls();
+            updateResult();
+        });
+    </script>
+</body>
+
+</html>

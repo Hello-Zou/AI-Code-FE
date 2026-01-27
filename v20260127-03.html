@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>每日激励语录</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div
+        class="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center transition-all duration-300 hover:shadow-2xl">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6">每日激励语录</h1>
+        <div class="mb-6">
+            <blockquote id="quote-text" class="text-lg italic text-gray-700 mb-4 leading-relaxed"></blockquote>
+            <cite id="quote-author" class="block text-right text-indigo-600 font-medium"></cite>
+        </div>
+        <button id="new-quote-btn"
+            class="px-6 py-3 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors duration-300 flex items-center justify-center mx-auto">
+            <i class="fas fa-sync-alt mr-2"></i>换一句
+        </button>
+    </div>
+
+    <script>
+        const quotes = [
+            { text: "生活就像海洋，只有意志坚强的人才能到达彼岸。", author: "马克思" },
+            { text: "成功的秘诀在于坚持自己的目标和信念。", author: "未知" },
+            { text: "每一次失败都是迈向成功的第一步。", author: "爱迪生" },
+            { text: "梦想不会逃跑，逃跑了的只是你自己。", author: "宫崎骏" },
+            { text: "努力不一定成功，放弃一定失败。", author: "洪战辉" },
+            { text: "不是因为看到希望才坚持，而是因为坚持才看到希望。", author: "未知" },
+            { text: "只有不断找寻机会的人才会及时把握机会。", author: "培根" },
+            { text: "人生最大的挑战是自己，战胜自己就是最大的成就。", author: "未知" }
+        ];
+
+        function getRandomQuote() {
+            return quotes[Math.floor(Math.random() * quotes.length)];
+        }
+
+        function displayQuote() {
+            const quote = getRandomQuote();
+            document.getElementById("quote-text").textContent = quote.text;
+            document.getElementById("quote-author").textContent = `—— ${quote.author}`;
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            displayQuote();
+            document.getElementById("new-quote-btn").addEventListener("click", displayQuote);
+        });
+    </script>
+</body>
+
+</html>
