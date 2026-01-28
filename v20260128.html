@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简单图表组件</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            padding: 30px 0;
+        }
+
+        h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .demo-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            font-size: 24px;
+            margin-bottom: 25px;
+            color: #444;
+            border-left: 4px solid #667eea;
+            padding-left: 15px;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        .chart-wrapper {
+            border: 1px solid #eee;
+            border-radius: 10px;
+            padding: 20px;
+            background: #f8f9fa;
+            margin-bottom: 20px;
+        }
+
+        .chart-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .chart-type-selector {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .chart-btn {
+            padding: 8px 20px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .chart-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .chart-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        input,
+        select {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .range-input {
+            width: 200px;
+        }
+
+        .data-input {
+            width: 100%;
+            min-height: 80px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        .btn.secondary {
+            background: #f8f9fa;
+            color: #333;
+        }
+
+        .btn.secondary:hover {
+            background: #e9ecef;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+
+        .chart-stats {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>简单图表组件</h1>
+            <p class="subtitle">使用Canvas绘制的轻量级图表</p>
+        </header>
+
+        <div class="demo-section">
+            <h2>图表类型</h2>
+            <div class="chart-type-selector">
+                <button class="chart-btn active" data-type="line">折线图</button>
+                <button class="chart-btn" data-type="bar">柱状图</button>
+                <button class="chart-btn" data-type="pie">饼图</button>
+                <button class="chart-btn" data-type="doughnut">环形图</button>
+                <button class="chart-btn" data-type="radar">雷达图</button>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>图表展示</h2>
+            <div class="chart-wrapper">
+                <div class="chart-container">
+                    <canvas id="mainChart" width="800" height="400"></canvas>
+                    <div class="tooltip" id="tooltip"></div>
+                </div>
+                <div class="legend" id="chartLegend"></div>
+            </div>
+
+            <div class="chart-stats" id="chartStats">
+                <strong>统计数据：</strong>
+                <div class="stats-grid" id="statsGrid"></div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>图表控制</h2>
+            <div class="chart-controls">
+                <div class="control-group">
+                    <label>图表标题：</label>
+                    <input type="text" id="chartTitle" value="月度销售数据" placeholder="输入图表标题">
+                </div>
+
+                <div class="control-group">
+                    <label>图表数据：</label>
+                    <textarea id="chartData" class="data-input">
+[
+  {"label": "1月", "value": 120, "color": "#667eea"},
+  {"label": "2月", "value": 200, "color": "#764ba2"},
+  {"label": "3月", "value": 150, "color": "#ff6b6b"},
+  {"label": "4月", "value": 180, "color": "#4ecdc4"},
+  {"label": "5月", "value": 220, "color": "#ffd166"},
+  {"label": "6月", "value": 190, "color": "#06d6a0"}
+]
+                    </textarea>
+                </div>
+
+                <div class="control-group">
+                    <label>图表宽度：</label>
+                    <input type="range" id="chartWidth" class="range-input" min="400" max="1200" value="800" step="50">
+                    <span id="widthValue">800px</span>
+                </div>
+
+                <div class="control-group">
+                    <label>图表高度：</label>
+                    <input type="range" id="chartHeight" class="range-input" min="300" max="600" value="400" step="50">
+                    <span id="heightValue">400px</span>
+                </div>
+
+                <div class="control-group">
+                    <label>显示网格：</label>
+                    <input type="checkbox" id="showGrid" checked>
+                </div>
+
+                <div class="control-group">
+                    <label>显示数值：</label>
+                    <input type="checkbox" id="showValues" checked>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <button class="btn" id="updateChart">更新图表</button>
+                <button class="btn secondary" id="randomData">随机数据</button>
+                <button class="btn secondary" id="exportBtn">导出图片</button>
+                <button class="btn secondary" id="resetBtn">重置设置</button>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>多图表对比</h2>
+            <div class="chart-grid">
+                <div class="chart-wrapper">
+                    <canvas id="chart1" width="300" height="200"></canvas>
+                    <div class="legend" id="legend1"></div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="chart2" width="300" height="200"></canvas>
+                    <div class="legend" id="legend2"></div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="chart3" width="300" height="200"></canvas>
+                    <div class="legend" id="legend3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class SimpleChart {
+            constructor(canvasId, options = {}) {
+                this.canvas = document.getElementById(canvasId);
+                this.ctx = this.canvas.getContext('2d');
+                this.options = {
+                    type: 'line',
+                    title: '图表标题',
+                    data: [],
+                    width: this.canvas.width,
+                    height: this.canvas.height,
+                    padding: { top: 60, right: 40, bottom: 60, left: 60 },
+                    colors: ['#667eea', '#764ba2', '#ff6b6b', '#4ecdc4', '#ffd166', '#06d6a0'],
+                    showGrid: true,
+                    showValues: true,
+                    animation: true,
+                    ...options
+                };
+
+                this.hoverIndex = -1;
+                this.tooltip = document.getElementById('tooltip');
+
+                this.init();
+            }
+
+            init() {
+                // 设置Canvas大小
+                this.canvas.width = this.options.width;
+                this.canvas.height = this.options.height;
+
+                // 绑定事件
+                this.bindEvents();
+
+                // 绘制图表
+                this.draw();
+            }
+
+            setData(data) {
+                this.options.data = Array.isArray(data) ? data : [];
+                this.draw();
+            }
+
+            setType(type) {
+                this.options.type = type;
+                this.draw();
+            }
+
+            setTitle(title) {
+                this.options.title = title;
+                this.draw();
+            }
+
+            draw() {
+                // 清除画布
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                if (this.options.data.length === 0) {
+                    this.drawNoData();
+                    return;
+                }
+
+                // 根据图表类型调用不同的绘制方法
+                switch (this.options.type) {
+                    case 'line':
+                        this.drawLineChart();
+                        break;
+                    case 'bar':
+                        this.drawBarChart();
+                        break;
+                    case 'pie':
+                        this.drawPieChart();
+                        break;
+                    case 'doughnut':
+                        this.drawDoughnutChart();
+                        break;
+                    case 'radar':
+                        this.drawRadarChart();
+                        break;
+                    default:
+                        this.drawLineChart();
+                }
+
+                // 绘制标题
+                this.drawTitle();
+            }
+
+            drawTitle() {
+                this.ctx.save();
+                this.ctx.font = 'bold 18px Arial';
+                this.ctx.fillStyle = '#333';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText(
+                    this.options.title,
+                    this.canvas.width / 2,
+                    this.options.padding.top / 2
+                );
+                this.ctx.restore();
+            }
+
+            drawLineChart() {
+                const data = this.options.data;
+                const { width, height, padding } = this.options;
+                const chartWidth = width - padding.left - padding.right;
+                const chartHeight = height - padding.top - padding.bottom;
+
+                // 计算最大值和最小值
+                const values = data.map(item => item.value);
+                const maxValue = Math.max(...values);
+                const minValue = Math.min(...values);
+
+                // 计算比例
+                const valueRange = maxValue - minValue;
+                const yScale = chartHeight / (valueRange || 1);
+
+                // 绘制网格
+                if (this.options.showGrid) {
+                    this.drawGrid(padding, chartWidth, chartHeight, maxValue, minValue);
+                }
+
+                // 绘制坐标轴
+                this.drawAxes(padding, chartWidth, chartHeight);
+
+                // 绘制折线
+                this.ctx.beginPath();
+                this.ctx.lineWidth = 3;
+                this.ctx.lineJoin = 'round';
+                this.ctx.lineCap = 'round';
+
+                const pointSpacing = chartWidth / (data.length - 1 || 1);
+
+                data.forEach((item, index) => {
+                    const x = padding.left + index * pointSpacing;
+                    const y = padding.top + chartHeight - (item.value - minValue) * yScale;
+
+                    if (index === 0) {
+                        this.ctx.moveTo(x, y);
+                    } else {
+                        this.ctx.lineTo(x, y);
+                    }
+
+                    // 绘制数据点
+                    this.drawPoint(x, y, item.color || this.options.colors[index % this.options.colors.length]);
+
+                    // 绘制数据标签
+                    if (this.options.showValues) {
+                        this.drawValueLabel(x, y - 20, item.value);
+                    }
+
+                    // 绘制X轴标签
+                    this.drawXLabel(x, padding.top + chartHeight + 15, item.label);
+                });
+
+                this.ctx.strokeStyle = '#667eea';
+                this.ctx.stroke();
+
+                // 填充区域
+                this.ctx.lineTo(padding.left + chartWidth, padding.top + chartHeight);
+                this.ctx.lineTo(padding.left, padding.top + chartHeight);
+                this.ctx.closePath();
+                this.ctx.fillStyle = 'rgba(102, 126, 234, 0.1)';
+                this.ctx.fill();
+            }
+
+            drawBarChart() {
+                const data = this.options.data;
+                const { width, height, padding } = this.options;
+                const chartWidth = width - padding.left - padding.right;
+                const chartHeight = height - padding.top - padding.bottom;
+
+                // 计算最大值
+                const values = data.map(item => item.value);
+                const maxValue = Math.max(...values);
+                const yScale = chartHeight / (maxValue || 1);
+
+                // 绘制网格
+                if (this.options.showGrid) {
+                    this.drawGrid(padding, chartWidth, chartHeight, maxValue, 0);
+                }
+
+                // 绘制坐标轴
+                this.drawAxes(padding, chartWidth, chartHeight);
+
+                // 绘制柱状图
+                const barWidth = chartWidth / data.length * 0.7;
+                const barSpacing = chartWidth / data.length * 0.3;
+
+                data.forEach((item, index) => {
+                    const x = padding.left + index * (barWidth + barSpacing) + barSpacing / 2;
+                    const barHeight = item.value * yScale;
+                    const y = padding.top + chartHeight - barHeight;
+
+                    // 绘制柱状图
+                    const color = item.color || this.options.colors[index % this.options.colors.length];
+                    this.ctx.fillStyle = this.hoverIndex === index ? this.adjustColor(color, 20) : color;
+                    this.ctx.fillRect(x, y, barWidth, barHeight);
+
+                    // 绘制边框
+                    this.ctx.strokeStyle = this.adjustColor(color, -20);
+                    this.ctx.lineWidth = 2;
+                    this.ctx.strokeRect(x, y, barWidth, barHeight);
+
+                    // 绘制数据标签
+                    if (this.options.showValues) {
+                        this.drawValueLabel(x + barWidth / 2, y - 10, item.value);
+                    }
+
+                    // 绘制X轴标签
+                    this.drawXLabel(x + barWidth / 2, padding.top + chartHeight + 15, item.label);
+                });
+            }
+
+            drawPieChart() {
+                const data = this.options.data;
+                const { width, height } = this.options;
+                const centerX = width / 2;
+                const centerY = height / 2;
+                const radius = Math.min(width, height) / 2 - 40;
+
+                // 计算总和
+                const total = data.reduce((sum, item) => sum + item.value, 0);
+
+                // 绘制饼图
+                let startAngle = 0;
+
+                data.forEach((item, index) => {
+                    const sliceAngle = (item.value / total) * 2 * Math.PI;
+                    const color = item.color || this.options.colors[index % this.options.colors.length];
+
+                    // 绘制扇形
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(centerX, centerY);
+                    this.ctx.arc(centerX, centerY, radius, startAngle, startAngle + sliceAngle);
+                    this.ctx.closePath();
+
+                    this.ctx.fillStyle = this.hoverIndex === index ? this.adjustColor(color, 20) : color;
+                    this.ctx.fill();
+
+                    // 绘制边框
+                    this.ctx.strokeStyle = '#fff';
+                    this.ctx.lineWidth = 2;
+                    this.ctx.stroke();
+
+                    // 绘制标签
+                    const angle = startAngle + sliceAngle / 2;
+                    const labelRadius = radius * 0.7;
+                    const labelX = centerX + Math.cos(angle) * labelRadius;
+                    const labelY = centerY + Math.sin(angle) * labelRadius;
+
+                    const percentage = ((item.value / total) * 100).toFixed(1);
+
+                    this.ctx.save();
+                    this.ctx.font = 'bold 14px Arial';
+                    this.ctx.fillStyle = '#333';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.textBaseline = 'middle';
+                    this.ctx.fillText(`${percentage}%`, labelX, labelY);
+                    this.ctx.restore();
+
+                    // 绘制图例
+                    this.drawLegendItem(index, item.label, color, centerX + 150, centerY - 100 + index * 25);
+
+                    startAngle += sliceAngle;
+                });
+            }
+
+            drawDoughnutChart() {
+                // 先绘制饼图
+                this.drawPieChart();
+
+                // 在中间绘制一个圆，形成环形
+                const { width, height } = this.options;
+                const centerX = width / 2;
+                const centerY = height / 2;
+                const innerRadius = Math.min(width, height) / 4;
+
+                this.ctx.beginPath();
+                this.ctx.arc(centerX, centerY, innerRadius, 0, 2 * Math.PI);
+                this.ctx.fillStyle = '#fff';
+                this.ctx.fill();
+
+                // 在中间显示总和
+                const total = this.options.data.reduce((sum, item) => sum + item.value, 0);
+
+                this.ctx.save();
+                this.ctx.font = 'bold 20px Arial';
+                this.ctx.fillStyle = '#333';
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'middle';
+                this.ctx.fillText('总计', centerX, centerY - 15);
+
+                this.ctx.font = 'bold 24px Arial';
+                this.ctx.fillStyle = '#667eea';
+                this.ctx.fillText(total.toString(), centerX, centerY + 15);
+                this.ctx.restore();
+            }
+
+            drawRadarChart() {
+                const data = this.options.data;
+                const { width, height, padding } = this.options;
+                const centerX = width / 2;
+                const centerY = height / 2;
+                const radius = Math.min(width, height) / 2 - 60;
+
+                // 计算最大值
+                const values = data.map(item => item.value);
+                const maxValue = Math.max(...values);
+
+                // 绘制网格线（多边形）
+                const sides = data.length;
+                this.ctx.strokeStyle = '#ddd';
+                this.ctx.lineWidth = 1;
+
+                // 绘制5层网格
+                for (let level = 1; level <= 5; level++) {
+                    this.ctx.beginPath();
+                    for (let i = 0; i <= sides; i++) {
+                        const angle = (i / sides) * 2 * Math.PI - Math.PI / 2;
+                        const x = centerX + Math.cos(angle) * (radius * level / 5);
+                        const y = centerY + Math.sin(angle) * (radius * level / 5);
+
+                        if (i === 0) {
+                            this.ctx.moveTo(x, y);
+                        } else {
+                            this.ctx.lineTo(x, y);
+                        }
+                    }
+                    this.ctx.closePath();
+                    this.ctx.stroke();
+                }
+
+                // 绘制轴线
+                for (let i = 0; i < sides; i++) {
+                    const angle = (i / sides) * 2 * Math.PI - Math.PI / 2;
+                    const x = centerX + Math.cos(angle) * radius;
+                    const y = centerY + Math.sin(angle) * radius;
+
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(centerX, centerY);
+                    this.ctx.lineTo(x, y);
+                    this.ctx.strokeStyle = '#ddd';
+                    this.ctx.stroke();
+
+                    // 绘制标签
+                    this.ctx.save();
+                    this.ctx.font = '14px Arial';
+                    this.ctx.fillStyle = '#333';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.textBaseline = 'middle';
+
+                    const labelX = centerX + Math.cos(angle) * (radius + 20);
+                    const labelY = centerY + Math.sin(angle) * (radius + 20);
+                    this.ctx.fillText(data[i].label, labelX, labelY);
+                    this.ctx.restore();
+                }
+
+                // 绘制数据区域
+                this.ctx.beginPath();
+                this.ctx.fillStyle = 'rgba(102, 126, 234, 0.3)';
+                this.ctx.strokeStyle = '#667eea';
+                this.ctx.lineWidth = 2;
+
+                data.forEach((item, i) => {
+                    const angle = (i / sides) * 2 * Math.PI - Math.PI / 2;
+                    const valueRadius = (item.value / maxValue) * radius;
+                    const x = centerX + Math.cos(angle) * valueRadius;
+                    const y = centerY + Math.sin(angle) * valueRadius;
+
+                    if (i === 0) {
+                        this.ctx.moveTo(x, y);
+                    } else {
+                        this.ctx.lineTo(x, y);
+                    }
+
+                    // 绘制数据点
+                    this.drawPoint(x, y, '#667eea');
+                });
+
+                this.ctx.closePath();
+                this.ctx.fill();
+                this.ctx.stroke();
+            }
+
+            drawGrid(padding, chartWidth, chartHeight, maxValue, minValue) {
+                this.ctx.strokeStyle = '#eee';
+                this.ctx.lineWidth = 1;
+
+                // 水平网格线
+                const gridLines = 5;
+                for (let i = 0; i <= gridLines; i++) {
+                    const y = padding.top + (chartHeight / gridLines) * i;
+
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(padding.left, y);
+                    this.ctx.lineTo(padding.left + chartWidth, y);
+                    this.ctx.stroke();
+
+                    // Y轴标签
+                    const value = maxValue - ((maxValue - minValue) / gridLines) * i;
+                    this.ctx.save();
+                    this.ctx.font = '12px Arial';
+                    this.ctx.fillStyle = '#666';
+                    this.ctx.textAlign = 'right';
+                    this.ctx.textBaseline = 'middle';
+                    this.ctx.fillText(value.toFixed(0), padding.left - 10, y);
+                    this.ctx.restore();
+                }
+            }
+
+            drawAxes(padding, chartWidth, chartHeight) {
+                // 绘制坐标轴
+                this.ctx.strokeStyle = '#333';
+                this.ctx.lineWidth = 2;
+
+                // Y轴
+                this.ctx.beginPath();
+                this.ctx.moveTo(padding.left, padding.top);
+                this.ctx.lineTo(padding.left, padding.top + chartHeight);
+                this.ctx.stroke();
+
+                // X轴
+                this.ctx.beginPath();
+                this.ctx.moveTo(padding.left, padding.top + chartHeight);
+                this.ctx.lineTo(padding.left + chartWidth, padding.top + chartHeight);
+                this.ctx.stroke();
+            }
+
+            drawPoint(x, y, color) {
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, 6, 0, 2 * Math.PI);
+                this.ctx.fillStyle = color;
+                this.ctx.fill();
+                this.ctx.strokeStyle = '#fff';
+                this.ctx.lineWidth = 2;
+                this.ctx.stroke();
+            }
+
+            drawValueLabel(x, y, value) {
+                this.ctx.save();
+                this.ctx.font = '12px Arial';
+                this.ctx.fillStyle = '#333';
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'bottom';
+                this.ctx.fillText(value.toString(), x, y);
+                this.ctx.restore();
+            }
+
+            drawXLabel(x, y, label) {
+                this.ctx.save();
+                this.ctx.font = '12px Arial';
+                this.ctx.fillStyle = '#666';
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'top';
+                this.ctx.fillText(label, x, y);
+                this.ctx.restore();
+            }
+
+            drawLegendItem(index, label, color, x, y) {
+                // 这个方法会在外部调用更新图例
+            }
+
+            drawNoData() {
+                this.ctx.save();
+                this.ctx.font = '20px Arial';
+                this.ctx.fillStyle = '#999';
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'middle';
+                this.ctx.fillText('暂无数据', this.canvas.width / 2, this.canvas.height / 2);
+                this.ctx.restore();
+            }
+
+            adjustColor(color, amount) {
+                // 简化版颜色调整
+                return color;
+            }
+
+            bindEvents() {
+                this.canvas.addEventListener('mousemove', (e) => {
+                    const rect = this.canvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+
+                    this.handleMouseMove(x, y);
+                });
+
+                this.canvas.addEventListener('mouseleave', () => {
+                    this.hoverIndex = -1;
+                    this.tooltip.style.opacity = '0';
+                    this.draw(); // 重绘清除hover效果
+                });
+            }
+
+            handleMouseMove(x, y) {
+                const data = this.options.data;
+                if (data.length === 0) return;
+
+                // 根据图表类型处理hover
+                if (this.options.type === 'pie' || this.options.type === 'doughnut') {
+                    const centerX = this.canvas.width / 2;
+                    const centerY = this.canvas.height / 2;
+                    const radius = Math.min(this.canvas.width, this.canvas.height) / 2 - 40;
+
+                    const dx = x - centerX;
+                    const dy = y - centerY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance <= radius) {
+                        const angle = Math.atan2(dy, dx);
+                        const normalizedAngle = angle < -Math.PI / 2 ? angle + 2 * Math.PI : angle;
+
+                        const total = data.reduce((sum, item) => sum + item.value, 0);
+                        let cumulativeAngle = -Math.PI / 2;
+
+                        for (let i = 0; i < data.length; i++) {
+                            const sliceAngle = (data[i].value / total) * 2 * Math.PI;
+
+                            if (normalizedAngle >= cumulativeAngle && normalizedAngle <= cumulativeAngle + sliceAngle) {
+                                if (this.hoverIndex !== i) {
+                                    this.hoverIndex = i;
+                                    this.draw();
+                                }
+
+                                // 显示tooltip
+                                this.tooltip.style.left = (x + 10) + 'px';
+                                this.tooltip.style.top = (y - 10) + 'px';
+                                this.tooltip.innerHTML = `
+                                    <div><strong>${data[i].label}</strong></div>
+                                    <div>值: ${data[i].value}</div>
+                                    <div>占比: ${((data[i].value / total) * 100).toFixed(1)}%</div>
+                                `;
+                                this.tooltip.style.opacity = '1';
+                                break;
+                            }
+
+                            cumulativeAngle += sliceAngle;
+                        }
+                    } else {
+                        this.hoverIndex = -1;
+                        this.tooltip.style.opacity = '0';
+                        this.draw();
+                    }
+                } else {
+                    // 其他图表类型的hover处理
+                    // 这里简化处理，实际项目需要更精确的计算
+                }
+            }
+
+            exportImage() {
+                return this.canvas.toDataURL('image/png');
+            }
+
+            getStats() {
+                const data = this.options.data;
+                const values = data.map(item => item.value);
+
+                return {
+                    count: data.length,
+                    total: values.reduce((a, b) => a + b, 0),
+                    average: values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0,
+                    max: Math.max(...values),
+                    min: Math.min(...values)
+                };
+            }
+        }
+
+        // 主图表实例
+        let mainChart;
+
+        // 辅助图表实例
+        let charts = [];
+
+        function initCharts() {
+            // 解析数据
+            const dataText = document.getElementById('chartData').value;
+            let chartData;
+            try {
+                chartData = JSON.parse(dataText);
+            } catch (e) {
+                chartData = [
+                    { label: "1月", value: 120, color: "#667eea" },
+                    { label: "2月", value: 200, color: "#764ba2" },
+                    { label: "3月", value: 150, color: "#ff6b6b" },
+                    { label: "4月", value: 180, color: "#4ecdc4" },
+                    { label: "5月", value: 220, color: "#ffd166" },
+                    { label: "6月", value: 190, color: "#06d6a0" }
+                ];
+            }
+
+            // 创建主图表
+            mainChart = new SimpleChart('mainChart', {
+                type: 'line',
+                title: document.getElementById('chartTitle').value,
+                data: chartData,
+                width: parseInt(document.getElementById('chartWidth').value),
+                height: parseInt(document.getElementById('chartHeight').value),
+                showGrid: document.getElementById('showGrid').checked,
+                showValues: document.getElementById('showValues').checked
+            });
+
+            // 更新图例
+            updateLegend(chartData, 'chartLegend');
+
+            // 更新统计信息
+            updateStats(mainChart);
+
+            // 创建辅助图表
+            createMiniCharts(chartData);
+        }
+
+        function updateLegend(data, legendId) {
+            const legend = document.getElementById(legendId);
+            legend.innerHTML = '';
+
+            data.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'legend-item';
+                div.innerHTML = `
+                    <div class="legend-color" style="background-color: ${item.color || getColor(index)}"></div>
+                    <span>${item.label}</span>
+                `;
+                legend.appendChild(div);
+            });
+        }
+
+        function updateStats(chart) {
+            const stats = chart.getStats();
+            const statsGrid = document.getElementById('statsGrid');
+
+            statsGrid.innerHTML = `
+                <div class="stat-item">
+                    <div class="stat-value">${stats.count}</div>
+                    <div class="stat-label">数据点数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${stats.total}</div>
+                    <div class="stat-label">总和</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${stats.average.toFixed(1)}</div>
+                    <div class="stat-label">平均值</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${stats.max}</div>
+                    <div class="stat-label">最大值</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${stats.min}</div>
+                    <div class="stat-label">最小值</div>
+                </div>
+            `;
+        }
+
+        function createMiniCharts(data) {
+            const chartTypes = ['line', 'bar', 'pie'];
+            const chartIds = ['chart1', 'chart2', 'chart3'];
+            const legendIds = ['legend1', 'legend2', 'legend3'];
+
+            charts = [];
+
+            chartTypes.forEach((type, index) => {
+                const chart = new SimpleChart(chartIds[index], {
+                    type: type,
+                    title: type === 'line' ? '折线图' : type === 'bar' ? '柱状图' : '饼图',
+                    data: data,
+                    width: 300,
+                    height: 200,
+                    showGrid: false,
+                    showValues: false
+                });
+
+                charts.push(chart);
+                updateLegend(data, legendIds[index]);
+            });
+        }
+
+        function getColor(index) {
+            const colors = ['#667eea', '#764ba2', '#ff6b6b', '#4ecdc4', '#ffd166', '#06d6a0'];
+            return colors[index % colors.length];
+        }
+
+        function generateRandomData(count = 6) {
+            const labels = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+            const data = [];
+
+            for (let i = 0; i < count; i++) {
+                data.push({
+                    label: labels[i],
+                    value: Math.floor(Math.random() * 200) + 50,
+                    color: getColor(i)
+                });
+            }
+
+            return data;
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+
+            // 图表类型切换
+            document.querySelectorAll('.chart-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+
+                    if (mainChart) {
+                        mainChart.setType(btn.dataset.type);
+                        updateStats(mainChart);
+                    }
+                });
+            });
+
+            // 更新图表按钮
+            document.getElementById('updateChart').addEventListener('click', () => {
+                initCharts();
+            });
+
+            // 随机数据按钮
+            document.getElementById('randomData').addEventListener('click', () => {
+                const randomData = generateRandomData();
+                document.getElementById('chartData').value = JSON.stringify(randomData, null, 2);
+                initCharts();
+            });
+
+            // 导出图片按钮
+            document.getElementById('exportBtn').addEventListener('click', () => {
+                if (mainChart) {
+                    const dataUrl = mainChart.exportImage();
+                    const link = document.createElement('a');
+                    link.download = 'chart-' + new Date().getTime() + '.png';
+                    link.href = dataUrl;
+                    link.click();
+                }
+            });
+
+            // 重置按钮
+            document.getElementById('resetBtn').addEventListener('click', () => {
+                document.getElementById('chartTitle').value = '月度销售数据';
+                document.getElementById('chartWidth').value = 800;
+                document.getElementById('chartHeight').value = 400;
+                document.getElementById('widthValue').textContent = '800px';
+                document.getElementById('heightValue').textContent = '400px';
+                document.getElementById('showGrid').checked = true;
+                document.getElementById('showValues').checked = true;
+
+                initCharts();
+            });
+
+            // 范围输入更新
+            document.getElementById('chartWidth').addEventListener('input', (e) => {
+                document.getElementById('widthValue').textContent = e.target.value + 'px';
+            });
+
+            document.getElementById('chartHeight').addEventListener('input', (e) => {
+                document.getElementById('heightValue').textContent = e.target.value + 'px';
+            });
+        });
+    </script>
+</body>
+
+</html>
