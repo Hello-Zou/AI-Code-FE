@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拖放组件演示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            padding: 30px 0;
+        }
+
+        h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .demo-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            font-size: 24px;
+            margin-bottom: 25px;
+            color: #444;
+            border-left: 4px solid #667eea;
+            padding-left: 15px;
+        }
+
+        /* 拖放容器样式 */
+        .drag-drop-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .drag-zone {
+            background: #f8f9fa;
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 300px;
+            transition: all 0.3s;
+        }
+
+        .drag-zone.active {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .zone-title {
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #555;
+        }
+
+        /* 拖放项目样式 */
+        .drag-item {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: move;
+            transition: all 0.3s;
+            user-select: none;
+            position: relative;
+        }
+
+        .drag-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-color: #667eea;
+        }
+
+        .drag-item.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+
+        .drag-item.drag-over {
+            border: 2px dashed #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .item-title {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .item-badge {
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .item-content {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .item-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #888;
+        }
+
+        .item-drag-handle {
+            cursor: grab;
+            padding: 5px;
+            color: #999;
+        }
+
+        .item-drag-handle:active {
+            cursor: grabbing;
+        }
+
+        /* 文件上传区域 */
+        .file-drop-zone {
+            text-align: center;
+            padding: 40px 20px;
+            border: 3px dashed #ddd;
+            border-radius: 15px;
+            background: #f8f9fa;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .file-drop-zone.active {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .upload-hint {
+            font-size: 14px;
+            color: #999;
+        }
+
+        .file-list {
+            margin-top: 20px;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .file-icon {
+            width: 40px;
+            height: 40px;
+            background: #667eea;
+            color: white;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 500;
+            margin-bottom: 3px;
+        }
+
+        .file-size {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .file-remove {
+            background: none;
+            border: none;
+            color: #ff4757;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+        }
+
+        .file-remove:hover {
+            background: #ffebee;
+        }
+
+        /* 排序列表 */
+        .sortable-list {
+            min-height: 200px;
+        }
+
+        .sortable-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+
+        .sortable-item.dragging {
+            background: #f8f9fa;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .sortable-index {
+            width: 30px;
+            height: 30px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: 600;
+        }
+
+        .sortable-content {
+            flex: 1;
+        }
+
+        /* 图片拖放 */
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+            min-height: 200px;
+        }
+
+        .image-item {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: move;
+            transition: all 0.3s;
+        }
+
+        .image-item:hover {
+            transform: scale(1.05);
+        }
+
+        .image-item img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .image-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .image-item:hover .image-overlay {
+            opacity: 1;
+        }
+
+        .image-title {
+            color: white;
+            font-size: 12px;
+            text-align: center;
+            padding: 5px;
+        }
+
+        /* 控制面板 */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        .btn.secondary {
+            background: #f8f9fa;
+            color: #333;
+        }
+
+        .btn.secondary:hover {
+            background: #e9ecef;
+        }
+
+        /* 结果展示 */
+        .result-box {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .result-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .result-content {
+            font-family: monospace;
+            font-size: 14px;
+            color: #666;
+            word-break: break-all;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .drag-drop-container {
+                grid-template-columns: 1fr;
+            }
+
+            .image-gallery {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>拖放组件演示</h1>
+            <p class="subtitle">简单易用的拖放功能实现</p>
+        </header>
+
+        <div class="demo-section">
+            <h2>任务看板（拖放重新排序）</h2>
+            <div class="drag-drop-container">
+                <div class="drag-zone" id="todoZone">
+                    <div class="zone-title">待办任务 (3)</div>
+                    <div class="drag-item" data-id="1">
+                        <div class="item-header">
+                            <span class="item-title">设计首页布局</span>
+                            <span class="item-badge">高</span>
+                        </div>
+                        <div class="item-content">完成网站首页的设计和布局规划</div>
+                        <div class="item-footer">
+                            <span>今天截止</span>
+                            <span class="item-drag-handle">☰</span>
+                        </div>
+                    </div>
+                    <div class="drag-item" data-id="2">
+                        <div class="item-header">
+                            <span class="item-title">编写API文档</span>
+                            <span class="item-badge">中</span>
+                        </div>
+                        <div class="item-content">为用户管理模块编写详细的API文档</div>
+                        <div class="item-footer">
+                            <span>明天截止</span>
+                            <span class="item-drag-handle">☰</span>
+                        </div>
+                    </div>
+                    <div class="drag-item" data-id="3">
+                        <div class="item-header">
+                            <span class="item-title">修复登录BUG</span>
+                            <span class="item-badge">紧急</span>
+                        </div>
+                        <div class="item-content">修复用户登录时的验证码显示问题</div>
+                        <div class="item-footer">
+                            <span>今天截止</span>
+                            <span class="item-drag-handle">☰</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="drag-zone" id="progressZone">
+                    <div class="zone-title">进行中 (2)</div>
+                    <div class="drag-item" data-id="4">
+                        <div class="item-header">
+                            <span class="item-title">开发用户管理</span>
+                            <span class="item-badge">中</span>
+                        </div>
+                        <div class="item-content">实现用户增删改查和权限管理功能</div>
+                        <div class="item-footer">
+                            <span>进行中</span>
+                            <span class="item-drag-handle">☰</span>
+                        </div>
+                    </div>
+                    <div class="drag-item" data-id="5">
+                        <div class="item-header">
+                            <span class="item-title">数据库优化</span>
+                            <span class="item-badge">低</span>
+                        </div>
+                        <div class="item-content">优化数据库查询语句和索引设计</div>
+                        <div class="item-footer">
+                            <span>进行中</span>
+                            <span class="item-drag-handle">☰</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="drag-zone" id="doneZone">
+                    <div class="zone-title">已完成 (2)</div>
+                    <div class="drag-item" data-id="6">
+                        <div class="item-header">
+                            <span class="item-title">项目需求分析</span>
+                            <span class="item-badge">已完成</span>
+                        </div>
+                        <div class="item-content">完成项目需求分析和功能规划</div>
+                        <div class="item-footer">
+                            <span>昨天完成</span>
+                            <span class="item-drag-handle">☰</span>
+                        </div>
+                    </div>
+                    <div class="drag-item" data-id="7">
+                        <div class="item-header">
+                            <span class="item-title">环境搭建</span>
+                            <span class="item-badge">已完成</span>
+                        </div>
+                        <div class="item-content">完成开发环境和生产环境的搭建</div>
+                        <div class="item-footer">
+                            <span>前天完成</span>
+                            <span class="item-drag-handle">☰</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>文件上传（拖放上传文件）</h2>
+            <div class="file-drop-zone" id="fileDropZone">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">拖拽文件到这里，或点击选择文件</div>
+                <div class="upload-hint">支持图片、文档、压缩文件，单个文件不超过10MB</div>
+                <input type="file" id="fileInput" multiple style="display: none;">
+                <button class="btn secondary" style="margin-top: 15px;"
+                    onclick="document.getElementById('fileInput').click()">
+                    选择文件
+                </button>
+            </div>
+
+            <div class="file-list" id="fileList">
+                <!-- 文件列表会动态添加 -->
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>列表排序（拖放排序）</h2>
+            <div class="sortable-list" id="sortableList">
+                <div class="sortable-item" data-id="item1">
+                    <div class="sortable-index">1</div>
+                    <div class="sortable-content">
+                        <div style="font-weight: 500;">JavaScript高级程序设计</div>
+                        <div style="font-size: 12px; color: #888;">学习JavaScript核心概念和高级特性</div>
+                    </div>
+                </div>
+                <div class="sortable-item" data-id="item2">
+                    <div class="sortable-index">2</div>
+                    <div class="sortable-content">
+                        <div style="font-weight: 500;">CSS权威指南</div>
+                        <div style="font-size: 12px; color: #888;">深入理解CSS布局和样式系统</div>
+                    </div>
+                </div>
+                <div class="sortable-item" data-id="item3">
+                    <div class="sortable-index">3</div>
+                    <div class="sortable-content">
+                        <div style="font-weight: 500;">Node.js实战</div>
+                        <div style="font-size: 12px; color: #888;">掌握Node.js后端开发技能</div>
+                    </div>
+                </div>
+                <div class="sortable-item" data-id="item4">
+                    <div class="sortable-index">4</div>
+                    <div class="sortable-content">
+                        <div style="font-weight: 500;">数据库设计原理</div>
+                        <div style="font-size: 12px; color: #888;">学习数据库设计和优化方法</div>
+                    </div>
+                </div>
+                <div class="sortable-item" data-id="item5">
+                    <div class="sortable-index">5</div>
+                    <div class="sortable-content">
+                        <div style="font-weight: 500;">算法导论</div>
+                        <div style="font-size: 12px; color: #888;">理解常用算法和数据结构</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="btn" onclick="getSortedList()">获取排序结果</button>
+                <button class="btn secondary" onclick="resetSortableList()">重置顺序</button>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>图片画廊（拖放重新排列）</h2>
+            <div class="image-gallery" id="imageGallery">
+                <div class="image-item" data-id="img1">
+                    <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb" alt="风景1">
+                    <div class="image-overlay">
+                        <div class="image-title">山脉风景</div>
+                    </div>
+                </div>
+                <div class="image-item" data-id="img2">
+                    <img src="https://images.unsplash.com/photo-1519681393784-d120267933ba" alt="风景2">
+                    <div class="image-overlay">
+                        <div class="image-title">城市夜景</div>
+                    </div>
+                </div>
+                <div class="image-item" data-id="img3">
+                    <img src="https://images.unsplash.com/photo-1518837695005-2083093ee35b" alt="风景3">
+                    <div class="image-overlay">
+                        <div class="image-title">海滩日落</div>
+                    </div>
+                </div>
+                <div class="image-item" data-id="img4">
+                    <img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e" alt="风景4">
+                    <div class="image-overlay">
+                        <div class="image-title">森林迷雾</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>当前状态</h2>
+            <div class="result-box">
+                <div class="result-title">拖放操作日志：</div>
+                <div class="result-content" id="dragLog"></div>
+            </div>
+
+            <div class="controls">
+                <button class="btn" onclick="getCurrentState()">获取当前状态</button>
+                <button class="btn secondary" onclick="clearLog()">清空日志</button>
+                <button class="btn secondary" onclick="resetAll()">重置所有</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class DragDropManager {
+            constructor() {
+                this.draggedItem = null;
+                this.dragOverZone = null;
+                this.dragOverItem = null;
+                this.logs = [];
+                this.files = [];
+
+                this.init();
+            }
+
+            init() {
+                this.setupTaskBoard();
+                this.setupFileUpload();
+                this.setupSortableList();
+                this.setupImageGallery();
+                this.log('拖放组件已初始化');
+            }
+
+            setupTaskBoard() {
+                const zones = document.querySelectorAll('.drag-zone');
+                const items = document.querySelectorAll('.drag-item');
+
+                // 设置拖放项
+                items.forEach(item => {
+                    item.setAttribute('draggable', 'true');
+
+                    item.addEventListener('dragstart', (e) => {
+                        this.draggedItem = item;
+                        item.classList.add('dragging');
+                        e.dataTransfer.setData('text/plain', item.dataset.id);
+                        this.log(`开始拖动: ${item.querySelector('.item-title').textContent}`);
+                    });
+
+                    item.addEventListener('dragend', () => {
+                        item.classList.remove('dragging');
+                        if (this.dragOverZone) {
+                            this.dragOverZone.classList.remove('active');
+                        }
+                        this.draggedItem = null;
+                        this.dragOverZone = null;
+                        this.updateZoneCounts();
+                        this.log('拖动结束');
+                    });
+                });
+
+                // 设置拖放区域
+                zones.forEach(zone => {
+                    zone.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        zone.classList.add('active');
+                        this.dragOverZone = zone;
+                    });
+
+                    zone.addEventListener('dragleave', () => {
+                        zone.classList.remove('active');
+                        if (this.dragOverZone === zone) {
+                            this.dragOverZone = null;
+                        }
+                    });
+
+                    zone.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        zone.classList.remove('active');
+
+                        if (this.draggedItem && this.draggedItem.parentNode !== zone) {
+                            zone.appendChild(this.draggedItem);
+                            const taskName = this.draggedItem.querySelector('.item-title').textContent;
+                            const zoneName = zone.querySelector('.zone-title').textContent.split(' ')[0];
+                            this.log(`将"${taskName}"移动到: ${zoneName}`);
+                        }
+
+                        this.dragOverZone = null;
+                    });
+                });
+            }
+
+            setupFileUpload() {
+                const dropZone = document.getElementById('fileDropZone');
+                const fileInput = document.getElementById('fileInput');
+                const fileList = document.getElementById('fileList');
+
+                // 拖放事件
+                dropZone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.add('active');
+                });
+
+                dropZone.addEventListener('dragleave', () => {
+                    dropZone.classList.remove('active');
+                });
+
+                dropZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.remove('active');
+
+                    const files = e.dataTransfer.files;
+                    this.handleFiles(files);
+                });
+
+                // 文件选择事件
+                fileInput.addEventListener('change', (e) => {
+                    const files = e.target.files;
+                    this.handleFiles(files);
+                });
+            }
+
+            handleFiles(files) {
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+
+                    // 检查文件大小（限制10MB）
+                    if (file.size > 10 * 1024 * 1024) {
+                        alert(`文件 ${file.name} 超过10MB限制`);
+                        continue;
+                    }
+
+                    this.files.push(file);
+                    this.addFileToList(file);
+                    this.log(`添加文件: ${file.name} (${this.formatFileSize(file.size)})`);
+                }
+            }
+
+            addFileToList(file) {
+                const fileList = document.getElementById('fileList');
+                const fileId = 'file_' + Date.now() + Math.random();
+
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.dataset.id = fileId;
+
+                const fileType = this.getFileType(file.name);
+                const iconText = this.getFileIcon(fileType);
+
+                fileItem.innerHTML = `
+                    <div class="file-icon">${iconText}</div>
+                    <div class="file-info">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-size">${this.formatFileSize(file.size)} • ${fileType}</div>
+                    </div>
+                    <button class="file-remove" onclick="dragManager.removeFile('${fileId}')">×</button>
+                `;
+
+                fileList.appendChild(fileItem);
+            }
+
+            removeFile(fileId) {
+                const fileItem = document.querySelector(`[data-id="${fileId}"]`);
+                if (fileItem) {
+                    const fileName = fileItem.querySelector('.file-name').textContent;
+                    this.files = this.files.filter(f => f.name !== fileName);
+                    fileItem.remove();
+                    this.log(`移除文件: ${fileName}`);
+                }
+            }
+
+            getFileType(filename) {
+                const ext = filename.split('.').pop().toLowerCase();
+                const types = {
+                    'jpg': '图片', 'jpeg': '图片', 'png': '图片', 'gif': '图片',
+                    'pdf': 'PDF文档', 'doc': 'Word文档', 'docx': 'Word文档',
+                    'xls': 'Excel文档', 'xlsx': 'Excel文档',
+                    'zip': '压缩文件', 'rar': '压缩文件',
+                    'txt': '文本文件', 'md': 'Markdown文件'
+                };
+                return types[ext] || '未知文件';
+            }
+
+            getFileIcon(fileType) {
+                const icons = {
+                    '图片': '🖼️',
+                    'PDF文档': '📄',
+                    'Word文档': '📝',
+                    'Excel文档': '📊',
+                    '压缩文件': '📦',
+                    '文本文件': '📃'
+                };
+                return icons[fileType] || '📎';
+            }
+
+            formatFileSize(bytes) {
+                if (bytes === 0) return '0 B';
+                const k = 1024;
+                const sizes = ['B', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            setupSortableList() {
+                const list = document.getElementById('sortableList');
+                const items = list.querySelectorAll('.sortable-item');
+
+                items.forEach(item => {
+                    item.setAttribute('draggable', 'true');
+
+                    item.addEventListener('dragstart', (e) => {
+                        item.classList.add('dragging');
+                        e.dataTransfer.setData('text/plain', item.dataset.id);
+                    });
+
+                    item.addEventListener('dragend', () => {
+                        item.classList.remove('dragging');
+                        this.updateSortableIndexes();
+                    });
+
+                    item.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        const draggingItem = document.querySelector('.sortable-item.dragging');
+                        if (draggingItem && draggingItem !== item) {
+                            const rect = item.getBoundingClientRect();
+                            const offset = e.clientY - rect.top;
+
+                            if (offset < rect.height / 2) {
+                                list.insertBefore(draggingItem, item);
+                            } else {
+                                list.insertBefore(draggingItem, item.nextSibling);
+                            }
+                        }
+                    });
+                });
+            }
+
+            updateSortableIndexes() {
+                const items = document.querySelectorAll('.sortable-item');
+                items.forEach((item, index) => {
+                    const indexSpan = item.querySelector('.sortable-index');
+                    indexSpan.textContent = index + 1;
+                });
+            }
+
+            setupImageGallery() {
+                const gallery = document.getElementById('imageGallery');
+                const images = gallery.querySelectorAll('.image-item');
+
+                images.forEach(img => {
+                    img.setAttribute('draggable', 'true');
+
+                    img.addEventListener('dragstart', (e) => {
+                        img.style.opacity = '0.5';
+                        e.dataTransfer.setData('text/plain', img.dataset.id);
+                    });
+
+                    img.addEventListener('dragend', () => {
+                        img.style.opacity = '1';
+                    });
+
+                    img.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        const draggingImg = document.querySelector('.image-item[draggable="true"][style*="opacity: 0.5"]');
+                        if (draggingImg && draggingImg !== img) {
+                            const rect = img.getBoundingClientRect();
+                            const offsetX = e.clientX - rect.left;
+                            const offsetY = e.clientY - rect.top;
+
+                            if (offsetX < rect.width / 2) {
+                                gallery.insertBefore(draggingImg, img);
+                            } else {
+                                gallery.insertBefore(draggingImg, img.nextSibling);
+                            }
+                        }
+                    });
+                });
+            }
+
+            updateZoneCounts() {
+                const zones = document.querySelectorAll('.drag-zone');
+                zones.forEach(zone => {
+                    const count = zone.querySelectorAll('.drag-item').length;
+                    const title = zone.querySelector('.zone-title');
+                    const zoneName = title.textContent.split(' ')[0];
+                    title.textContent = `${zoneName} (${count})`;
+                });
+            }
+
+            log(message) {
+                const timestamp = new Date().toLocaleTimeString();
+                this.logs.push(`[${timestamp}] ${message}`);
+
+                const logElement = document.getElementById('dragLog');
+                if (logElement) {
+                    logElement.innerHTML = this.logs.map(log => `<div>${log}</div>`).join('');
+                    logElement.scrollTop = logElement.scrollHeight;
+                }
+            }
+
+            clearLog() {
+                this.logs = [];
+                document.getElementById('dragLog').innerHTML = '';
+                this.log('日志已清空');
+            }
+
+            getCurrentState() {
+                const state = {
+                    taskBoard: {},
+                    sortedList: [],
+                    files: this.files.map(f => ({ name: f.name, size: this.formatFileSize(f.size) })),
+                    imageOrder: Array.from(document.querySelectorAll('.image-item')).map(img => img.dataset.id)
+                };
+
+                // 获取看板状态
+                document.querySelectorAll('.drag-zone').forEach(zone => {
+                    const zoneName = zone.querySelector('.zone-title').textContent.split(' ')[0];
+                    const tasks = Array.from(zone.querySelectorAll('.drag-item')).map(item => ({
+                        id: item.dataset.id,
+                        title: item.querySelector('.item-title').textContent
+                    }));
+                    state.taskBoard[zoneName] = tasks;
+                });
+
+                // 获取排序列表状态
+                state.sortedList = Array.from(document.querySelectorAll('.sortable-item')).map(item => ({
+                    id: item.dataset.id,
+                    title: item.querySelector('.sortable-content div:first-child').textContent
+                }));
+
+                this.log('获取当前状态成功');
+                console.log('当前状态:', state);
+                alert('当前状态已输出到控制台，请按F12查看');
+
+                return state;
+            }
+
+            resetAll() {
+                // 重置任务看板
+                const todoZone = document.getElementById('todoZone');
+                const progressZone = document.getElementById('progressZone');
+                const doneZone = document.getElementById('doneZone');
+
+                // 清空所有区域
+                [progressZone, doneZone].forEach(zone => {
+                    const items = zone.querySelectorAll('.drag-item');
+                    items.forEach(item => todoZone.appendChild(item));
+                });
+
+                // 重置排序列表
+                this.resetSortableList();
+
+                // 清空文件列表
+                this.files = [];
+                document.getElementById('fileList').innerHTML = '';
+
+                // 重置图片顺序
+                const gallery = document.getElementById('imageGallery');
+                const images = Array.from(gallery.querySelectorAll('.image-item'));
+                const sortedImages = images.sort((a, b) => {
+                    const idA = parseInt(a.dataset.id.replace('img', ''));
+                    const idB = parseInt(b.dataset.id.replace('img', ''));
+                    return idA - idB;
+                });
+
+                sortedImages.forEach(img => gallery.appendChild(img));
+
+                // 更新计数
+                this.updateZoneCounts();
+                this.updateSortableIndexes();
+
+                this.log('所有组件已重置');
+            }
+
+            getSortedList() {
+                const items = document.querySelectorAll('.sortable-item');
+                const order = Array.from(items).map(item => item.dataset.id);
+                this.log(`当前排序: ${order.join(', ')}`);
+                alert(`当前排序顺序: ${order.join(' → ')}`);
+                return order;
+            }
+
+            resetSortableList() {
+                const list = document.getElementById('sortableList');
+                const items = Array.from(list.querySelectorAll('.sortable-item'));
+
+                const sortedItems = items.sort((a, b) => {
+                    const idA = parseInt(a.dataset.id.replace('item', ''));
+                    const idB = parseInt(b.dataset.id.replace('item', ''));
+                    return idA - idB;
+                });
+
+                sortedItems.forEach(item => list.appendChild(item));
+                this.updateSortableIndexes();
+                this.log('排序列表已重置');
+            }
+        }
+
+        // 初始化拖放管理器
+        let dragManager;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            dragManager = new DragDropManager();
+            window.dragManager = dragManager; // 暴露到全局
+        });
+    </script>
+</body>
+
+</html>

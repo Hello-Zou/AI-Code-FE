@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>倒计时组件 - 2026年2月3日</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a2a3a 0%, #2c3e50 100%);
+            min-height: 100vh;
+            color: #ecf0f1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            background: linear-gradient(135deg, #3498db, #2ecc71);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .date {
+            color: #95a5a6;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        .description {
+            color: #bdc3c7;
+            max-width: 800px;
+            margin: 0 auto 30px;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        .demo-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .countdown-card {
+            background: rgba(44, 62, 80, 0.7);
+            border-radius: 15px;
+            padding: 30px;
+            border: 1px solid rgba(52, 152, 219, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .countdown-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            border-color: rgba(52, 152, 219, 0.4);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card-icon {
+            font-size: 2rem;
+            color: #3498db;
+        }
+
+        .card-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #ecf0f1;
+        }
+
+        .countdown-display {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .time-unit {
+            text-align: center;
+            min-width: 70px;
+        }
+
+        .time-value {
+            font-size: 2.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3498db, #2ecc71);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            line-height: 1;
+            text-shadow: 0 2px 10px rgba(52, 152, 219, 0.3);
+        }
+
+        .time-label {
+            font-size: 0.9rem;
+            color: #95a5a6;
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .countdown-progress {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            margin: 25px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            border-radius: 3px;
+            width: 100%;
+            transition: width 1s linear;
+        }
+
+        .event-info {
+            text-align: center;
+            margin-top: 20px;
+            color: #bdc3c7;
+            font-size: 0.95rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(46, 204, 113, 0.4);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f39c12, #d35400);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #bdc3c7;
+            font-weight: 500;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+
+        .custom-countdown {
+            background: rgba(44, 62, 80, 0.7);
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 40px;
+            border: 1px solid rgba(52, 152, 219, 0.2);
+        }
+
+        .code-example {
+            background: rgba(26, 42, 58, 0.8);
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 40px;
+            border-left: 4px solid #3498db;
+        }
+
+        pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-top: 15px;
+            font-family: 'Consolas', monospace;
+            color: #ecf0f1;
+            font-size: 0.9rem;
+        }
+
+        .keyword {
+            color: #3498db;
+        }
+
+        .string {
+            color: #2ecc71;
+        }
+
+        .comment {
+            color: #95a5a6;
+        }
+
+        .number {
+            color: #f39c12;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #95a5a6;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px;
+            }
+
+            h1 {
+                font-size: 2.2rem;
+            }
+
+            .demo-section {
+                grid-template-columns: 1fr;
+            }
+
+            .time-value {
+                font-size: 2.2rem;
+            }
+
+            .controls {
+                justify-content: center;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>倒计时组件</h1>
+            <div class="date">2026年2月3日</div>
+            <p class="description">
+                一个灵活易用的倒计时组件，支持多种时间格式、自定义回调、暂停/恢复等功能。
+                适用于活动倒计时、促销计时、任务截止提醒等场景。
+            </p>
+        </header>
+
+        <div class="demo-section">
+            <!-- 新年倒计时 -->
+            <div class="countdown-card">
+                <div class="card-header">
+                    <div class="card-icon">🎉</div>
+                    <div class="card-title">2027年新年倒计时</div>
+                </div>
+                <div class="countdown-display" id="newYearCountdown">
+                    <!-- 动态生成 -->
+                </div>
+                <div class="countdown-progress">
+                    <div class="progress-bar" id="newYearProgress"></div>
+                </div>
+                <div class="event-info">
+                    距离 2027年1月1日 00:00:00
+                </div>
+                <div class="controls">
+                    <button class="btn btn-warning" id="pauseNewYear">
+                        <i class="fas fa-pause"></i> 暂停
+                    </button>
+                    <button class="btn btn-success" id="resumeNewYear" style="display: none;">
+                        <i class="fas fa-play"></i> 继续
+                    </button>
+                </div>
+            </div>
+
+            <!-- 促销倒计时 -->
+            <div class="countdown-card">
+                <div class="card-header">
+                    <div class="card-icon">🔥</div>
+                    <div class="card-title">限时促销结束</div>
+                </div>
+                <div class="countdown-display" id="saleCountdown">
+                    <!-- 动态生成 -->
+                </div>
+                <div class="countdown-progress">
+                    <div class="progress-bar" id="saleProgress"></div>
+                </div>
+                <div class="event-info">
+                    促销活动将于结束后自动结束
+                </div>
+                <div class="controls">
+                    <button class="btn btn-danger" id="resetSale">
+                        <i class="fas fa-redo"></i> 重新开始
+                    </button>
+                </div>
+            </div>
+
+            <!-- 任务截止 -->
+            <div class="countdown-card">
+                <div class="card-header">
+                    <div class="card-icon">⏰</div>
+                    <div class="card-title">任务截止时间</div>
+                </div>
+                <div class="countdown-display" id="taskCountdown">
+                    <!-- 动态生成 -->
+                </div>
+                <div class="countdown-progress">
+                    <div class="progress-bar" id="taskProgress"></div>
+                </div>
+                <div class="event-info">
+                    今日任务提交截止时间
+                </div>
+                <div class="controls">
+                    <button class="btn btn-primary" id="addHour">
+                        <i class="fas fa-plus"></i> 延长1小时
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 自定义倒计时 -->
+        <div class="custom-countdown">
+            <h3 style="margin-bottom: 25px; color: #ecf0f1; text-align: center;">
+                <i class="fas fa-cogs"></i> 创建自定义倒计时
+            </h3>
+
+            <div class="input-group">
+                <div class="input-wrapper">
+                    <label for="targetDate">目标日期时间</label>
+                    <input type="datetime-local" id="targetDate" min="2026-02-03T00:00">
+                </div>
+
+                <div class="input-wrapper">
+                    <label for="countdownFormat">显示格式</label>
+                    <select id="countdownFormat">
+                        <option value="full">完整格式 (天:时:分:秒)</option>
+                        <option value="compact">紧凑格式 (天-时-分-秒)</option>
+                        <option value="hours">小时模式 (总小时数)</option>
+                        <option value="minutes">分钟模式 (总分钟数)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="countdown-display" id="customCountdown">
+                <!-- 动态生成 -->
+            </div>
+
+            <div class="controls" style="justify-content: center;">
+                <button class="btn btn-primary" id="startCustom">
+                    <i class="fas fa-play-circle"></i> 开始倒计时
+                </button>
+                <button class="btn btn-danger" id="stopCustom" style="display: none;">
+                    <i class="fas fa-stop-circle"></i> 停止
+                </button>
+            </div>
+        </div>
+
+        <div class="code-example">
+            <h3 style="color: #ecf0f1; margin-bottom: 15px;">
+                <i class="fas fa-code"></i> 使用方法
+            </h3>
+            <pre><code><span class="comment">// 创建倒计时实例</span>
+<span class="keyword">const</span> countdown = <span class="keyword">new</span> Countdown({
+    <span class="string">'targetDate'</span>: <span class="string">'2026-12-31T23:59:59'</span>, <span class="comment">// 目标时间</span>
+    <span class="string">'format'</span>: <span class="string">'full'</span>, <span class="comment">// 显示格式</span>
+    <span class="string">'updateInterval'</span>: <span class="number">1000</span>, <span class="comment">// 更新间隔(毫秒)</span>
+    <span class="string">'onUpdate'</span>: <span class="keyword">function</span>(time) {
+        <span class="comment">// 每次更新时的回调</span>
+        console.log(time.days + <span class="string">'天'</span> + time.hours + <span class="string">'时'</span>);
+    },
+    <span class="string">'onComplete'</span>: <span class="keyword">function</span>() {
+        <span class="comment">// 倒计时结束时的回调</span>
+        alert(<span class="string">'倒计时结束!'</span>);
+    }
+});
+
+<span class="comment">// 开始倒计时</span>
+countdown.start();
+
+<span class="comment">// 控制方法</span>
+countdown.pause();     <span class="comment">// 暂停</span>
+countdown.resume();    <span class="comment">// 继续</span>
+countdown.reset();     <span class="comment">// 重置</span>
+countdown.addTime(<span class="number">3600</span>); <span class="comment">// 增加时间(秒)</span></code></pre>
+        </div>
+
+        <footer>
+            <p>倒计时组件 &copy; 2026年2月3日 | 灵活易用，功能丰富</p>
+        </footer>
+    </div>
+
+    <script>
+        // 倒计时类
+        class Countdown {
+            constructor(options = {}) {
+                this.options = {
+                    targetDate: new Date(Date.now() + 24 * 60 * 60 * 1000), // 默认24小时后
+                    format: 'full',
+                    updateInterval: 1000,
+                    onUpdate: null,
+                    onComplete: null,
+                    showProgress: true,
+                    autoStart: true,
+                    ...options
+                };
+
+                this.targetTime = new Date(this.options.targetDate).getTime();
+                this.remainingTime = 0;
+                this.intervalId = null;
+                this.isRunning = false;
+                this.isPaused = false;
+                this.pausedTime = 0;
+                this.startTime = 0;
+                this.totalDuration = 0;
+
+                if (this.options.autoStart) {
+                    this.start();
+                }
+            }
+
+            // 开始倒计时
+            start() {
+                if (this.isRunning) return;
+
+                this.targetTime = new Date(this.options.targetDate).getTime();
+                this.startTime = Date.now();
+                this.totalDuration = this.targetTime - this.startTime;
+                this.isRunning = true;
+                this.isPaused = false;
+
+                this.update();
+                this.intervalId = setInterval(() => this.update(), this.options.updateInterval);
+            }
+
+            // 更新倒计时
+            update() {
+                if (!this.isRunning || this.isPaused) return;
+
+                const currentTime = Date.now();
+                this.remainingTime = this.targetTime - currentTime;
+
+                if (this.remainingTime <= 0) {
+                    this.complete();
+                    return;
+                }
+
+                const timeData = this.parseTime(this.remainingTime);
+
+                // 调用更新回调
+                if (typeof this.options.onUpdate === 'function') {
+                    this.options.onUpdate(timeData, this.getProgress());
+                }
+
+                return timeData;
+            }
+
+            // 解析时间为各个单位
+            parseTime(milliseconds) {
+                const totalSeconds = Math.floor(milliseconds / 1000);
+                const totalMinutes = Math.floor(totalSeconds / 60);
+                const totalHours = Math.floor(totalMinutes / 60);
+                const totalDays = Math.floor(totalHours / 24);
+
+                return {
+                    total: milliseconds,
+                    days: totalDays,
+                    hours: totalHours % 24,
+                    minutes: totalMinutes % 60,
+                    seconds: totalSeconds % 60,
+                    totalDays,
+                    totalHours,
+                    totalMinutes,
+                    totalSeconds
+                };
+            }
+
+            // 获取进度百分比
+            getProgress() {
+                if (this.totalDuration <= 0) return 100;
+
+                const elapsed = this.totalDuration - this.remainingTime;
+                return Math.min(100, (elapsed / this.totalDuration) * 100);
+            }
+
+            // 格式化显示
+            formatTime(timeData) {
+                const format = this.options.format;
+
+                switch (format) {
+                    case 'compact':
+                        return `${this.pad(timeData.days)}-${this.pad(timeData.hours)}-${this.pad(timeData.minutes)}-${this.pad(timeData.seconds)}`;
+
+                    case 'hours':
+                        return `${this.pad(timeData.totalHours)}:${this.pad(timeData.minutes)}:${this.pad(timeData.seconds)}`;
+
+                    case 'minutes':
+                        return `${this.pad(timeData.totalMinutes)}:${this.pad(timeData.seconds)}`;
+
+                    case 'full':
+                    default:
+                        return {
+                            days: this.pad(timeData.days),
+                            hours: this.pad(timeData.hours),
+                            minutes: this.pad(timeData.minutes),
+                            seconds: this.pad(timeData.seconds)
+                        };
+                }
+            }
+
+            // 补零
+            pad(num) {
+                return num.toString().padStart(2, '0');
+            }
+
+            // 暂停
+            pause() {
+                if (!this.isRunning || this.isPaused) return;
+
+                clearInterval(this.intervalId);
+                this.isPaused = true;
+                this.pausedTime = Date.now();
+            }
+
+            // 继续
+            resume() {
+                if (!this.isRunning || !this.isPaused) return;
+
+                // 调整目标时间，考虑暂停的时间
+                const pauseDuration = Date.now() - this.pausedTime;
+                this.targetTime += pauseDuration;
+
+                this.isPaused = false;
+                this.intervalId = setInterval(() => this.update(), this.options.updateInterval);
+            }
+
+            // 重置
+            reset(newTargetDate = null) {
+                clearInterval(this.intervalId);
+
+                if (newTargetDate) {
+                    this.options.targetDate = newTargetDate;
+                }
+
+                this.targetTime = new Date(this.options.targetDate).getTime();
+                this.isRunning = false;
+                this.isPaused = false;
+
+                // 立即更新一次显示
+                const timeData = this.parseTime(this.targetTime - Date.now());
+                if (typeof this.options.onUpdate === 'function') {
+                    this.options.onUpdate(timeData, 0);
+                }
+
+                return timeData;
+            }
+
+            // 增加时间（秒）
+            addTime(seconds) {
+                this.targetTime += seconds * 1000;
+                this.totalDuration = this.targetTime - this.startTime;
+            }
+
+            // 减少时间（秒）
+            subtractTime(seconds) {
+                this.targetTime -= seconds * 1000;
+                this.totalDuration = this.targetTime - this.startTime;
+            }
+
+            // 完成
+            complete() {
+                clearInterval(this.intervalId);
+                this.isRunning = false;
+
+                if (typeof this.options.onComplete === 'function') {
+                    this.options.onComplete();
+                }
+
+                return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+            }
+
+            // 停止
+            stop() {
+                clearInterval(this.intervalId);
+                this.isRunning = false;
+                this.isPaused = false;
+            }
+        }
+
+        // 更新显示的函数
+        function updateDisplay(containerId, timeData, progressBarId = null) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            const formatted = {
+                days: String(timeData.days).padStart(2, '0'),
+                hours: String(timeData.hours).padStart(2, '0'),
+                minutes: String(timeData.minutes).padStart(2, '0'),
+                seconds: String(timeData.seconds).padStart(2, '0')
+            };
+
+            container.innerHTML = `
+                <div class="time-unit">
+                    <div class="time-value">${formatted.days}</div>
+                    <div class="time-label">天</div>
+                </div>
+                <div class="time-unit">
+                    <div class="time-value">${formatted.hours}</div>
+                    <div class="time-label">时</div>
+                </div>
+                <div class="time-unit">
+                    <div class="time-value">${formatted.minutes}</div>
+                    <div class="time-label">分</div>
+                </div>
+                <div class="time-unit">
+                    <div class="time-value">${formatted.seconds}</div>
+                    <div class="time-label">秒</div>
+                </div>
+            `;
+
+            // 更新进度条
+            if (progressBarId) {
+                const progressBar = document.getElementById(progressBarId);
+                if (progressBar) {
+                    const progress = 100 - (timeData.total / (24 * 60 * 60 * 1000)) * 100;
+                    progressBar.style.width = `${Math.min(100, Math.max(0, progress))}%`;
+                }
+            }
+        }
+
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function () {
+            // 设置默认目标日期为明天
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(23, 59, 59, 0);
+
+            // 1. 新年倒计时
+            const newYearDate = new Date('2027-01-01T00:00:00');
+            const newYearCountdown = new Countdown({
+                targetDate: newYearDate,
+                format: 'full',
+                onUpdate: function (timeData) {
+                    updateDisplay('newYearCountdown', timeData, 'newYearProgress');
+                },
+                onComplete: function () {
+                    document.getElementById('newYearCountdown').innerHTML = `
+                        <div style="text-align: center; padding: 20px;">
+                            <div style="font-size: 2rem; margin-bottom: 10px;">🎊</div>
+                            <div style="font-size: 1.5rem; color: #2ecc71;">新年快乐!</div>
+                        </div>
+                    `;
+                }
+            });
+
+            // 2. 促销倒计时（24小时后结束）
+            const saleDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
+            const saleCountdown = new Countdown({
+                targetDate: saleDate,
+                format: 'full',
+                onUpdate: function (timeData) {
+                    updateDisplay('saleCountdown', timeData, 'saleProgress');
+                },
+                onComplete: function () {
+                    document.getElementById('saleCountdown').innerHTML = `
+                        <div style="text-align: center; padding: 20px;">
+                            <div style="font-size: 2rem; margin-bottom: 10px;">⏰</div>
+                            <div style="font-size: 1.2rem; color: #e74c3c;">促销已结束</div>
+                        </div>
+                    `;
+                }
+            });
+
+            // 3. 任务倒计时（今天18:00截止）
+            const taskDate = new Date();
+            taskDate.setHours(18, 0, 0, 0);
+            if (taskDate < new Date()) {
+                taskDate.setDate(taskDate.getDate() + 1);
+            }
+
+            const taskCountdown = new Countdown({
+                targetDate: taskDate,
+                format: 'full',
+                onUpdate: function (timeData) {
+                    updateDisplay('taskCountdown', timeData, 'taskProgress');
+
+                    // 如果剩余时间少于1小时，改变颜色
+                    if (timeData.totalHours < 1) {
+                        const timeValues = document.querySelectorAll('#taskCountdown .time-value');
+                        timeValues.forEach(el => {
+                            el.style.background = 'linear-gradient(135deg, #e74c3c, #c0392b)';
+                            el.style.webkitBackgroundClip = 'text';
+                        });
+                    }
+                },
+                onComplete: function () {
+                    document.getElementById('taskCountdown').innerHTML = `
+                        <div style="text-align: center; padding: 20px;">
+                            <div style="font-size: 2rem; margin-bottom: 10px;">📝</div>
+                            <div style="font-size: 1.2rem; color: #e74c3c;">任务截止时间已到</div>
+                        </div>
+                    `;
+                }
+            });
+
+            // 4. 自定义倒计时
+            let customCountdown = null;
+
+            // 设置默认时间为3小时后
+            const defaultCustomDate = new Date(Date.now() + 3 * 60 * 60 * 1000);
+            document.getElementById('targetDate').value = defaultCustomDate.toISOString().slice(0, 16);
+
+            // 按钮事件绑定
+            document.getElementById('pauseNewYear').addEventListener('click', function () {
+                newYearCountdown.pause();
+                this.style.display = 'none';
+                document.getElementById('resumeNewYear').style.display = 'flex';
+            });
+
+            document.getElementById('resumeNewYear').addEventListener('click', function () {
+                newYearCountdown.resume();
+                this.style.display = 'none';
+                document.getElementById('pauseNewYear').style.display = 'flex';
+            });
+
+            document.getElementById('resetSale').addEventListener('click', function () {
+                const newSaleDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
+                saleCountdown.reset(newSaleDate);
+                saleCountdown.start();
+            });
+
+            document.getElementById('addHour').addEventListener('click', function () {
+                taskCountdown.addTime(3600); // 增加1小时
+            });
+
+            document.getElementById('startCustom').addEventListener('click', function () {
+                const targetDateInput = document.getElementById('targetDate').value;
+                const format = document.getElementById('countdownFormat').value;
+
+                if (!targetDateInput) {
+                    alert('请选择目标日期时间');
+                    return;
+                }
+
+                const targetDate = new Date(targetDateInput);
+                if (targetDate <= new Date()) {
+                    alert('目标时间必须是将来的时间');
+                    return;
+                }
+
+                // 停止现有的倒计时
+                if (customCountdown) {
+                    customCountdown.stop();
+                }
+
+                // 创建新的倒计时
+                customCountdown = new Countdown({
+                    targetDate: targetDate,
+                    format: format,
+                    autoStart: false,
+                    onUpdate: function (timeData) {
+                        const container = document.getElementById('customCountdown');
+                        if (format === 'full') {
+                            updateDisplay('customCountdown', timeData);
+                        } else {
+                            const formatted = customCountdown.formatTime(timeData);
+                            container.innerHTML = `
+                                <div style="text-align: center; width: 100%;">
+                                    <div class="time-value" style="font-size: 3.5rem; margin-bottom: 10px;">
+                                        ${formatted}
+                                    </div>
+                                    <div class="time-label">
+                                        ${format === 'compact' ? '天-时-分-秒' :
+                                    format === 'hours' ? '总小时数' : '总分钟数'}
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    },
+                    onComplete: function () {
+                        document.getElementById('customCountdown').innerHTML = `
+                            <div style="text-align: center; padding: 30px;">
+                                <div style="font-size: 3rem; margin-bottom: 15px;">🎯</div>
+                                <div style="font-size: 1.5rem; color: #2ecc71;">倒计时结束!</div>
+                            </div>
+                        `;
+                        document.getElementById('startCustom').style.display = 'flex';
+                        document.getElementById('stopCustom').style.display = 'none';
+                    }
+                });
+
+                customCountdown.start();
+
+                this.style.display = 'none';
+                document.getElementById('stopCustom').style.display = 'flex';
+            });
+
+            document.getElementById('stopCustom').addEventListener('click', function () {
+                if (customCountdown) {
+                    customCountdown.stop();
+                    document.getElementById('customCountdown').innerHTML = `
+                        <div style="text-align: center; padding: 30px; color: #95a5a6;">
+                            <i class="fas fa-stop-circle" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                            <div>倒计时已停止</div>
+                        </div>
+                    `;
+                }
+
+                this.style.display = 'none';
+                document.getElementById('startCustom').style.display = 'flex';
+            });
+
+            // 初始显示
+            updateDisplay('newYearCountdown', newYearCountdown.update(), 'newYearProgress');
+            updateDisplay('saleCountdown', saleCountdown.update(), 'saleProgress');
+            updateDisplay('taskCountdown', taskCountdown.update(), 'taskProgress');
+
+            // 自定义倒计时初始显示
+            const initialTime = new Countdown({
+                targetDate: defaultCustomDate,
+                format: 'full',
+                autoStart: false
+            }).update();
+
+            updateDisplay('customCountdown', initialTime);
+        });
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</body>
+
+</html>

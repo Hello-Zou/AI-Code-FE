@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自适应文本大小</title>
+    <style>
+        .d1 {
+            width: 300px;
+            margin: 0 auto;
+            border: 1px solid #ddd;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+
+        p {
+            margin: 10px 0;
+            padding: 5px;
+        }
+
+        .p1 {
+            font-size: 20px;
+            color: #333;
+        }
+
+        .p2 {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .p3 {
+            /* 确保单行显示 */
+            white-space: nowrap;
+
+            /* 关键：确保不溢出 */
+            overflow: hidden;
+
+            /* 确保宽度适应 */
+            width: 100%;
+            color: #e74c3c;
+            background-color: #fff3f3;
+            border: 1px solid #ffcccc;
+            padding: 8px;
+            box-sizing: border-box;
+
+            /* 初始字体大小，JavaScript会调整 */
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="d1">
+        <p class="p1">PHP数据导出类特点</p>
+        <p class="p2">PHP数据导出类特点PHP数据导出类特点</p>
+        <p class="p3" id="adaptiveText">PHP数据导出类特点PHP数据导出类特点PHP数据导出类特点</p>
+    </div>
+
+    <script>
+        function adjustFontSize() {
+            const textElement = document.getElementById('adaptiveText');
+            const container = textElement.parentElement;
+
+            // 获取可用宽度（容器宽度减去padding）
+            const containerWidth = container.clientWidth - 40; // 左右padding
+
+            // 重置字体大小
+            let fontSize = 16;
+            textElement.style.fontSize = fontSize + 'px';
+
+            // 获取文本实际宽度
+            let textWidth = textElement.scrollWidth;
+
+            // 逐步减小字体直到完全适应容器
+            while (textWidth > containerWidth && fontSize > 6) { // 最小6px
+                fontSize -= 0.5;
+                textElement.style.fontSize = fontSize + 'px';
+                textWidth = textElement.scrollWidth;
+            }
+
+            console.log('最终字体大小:', fontSize + 'px', '文本宽度:', textWidth + 'px', '容器宽度:', containerWidth + 'px');
+        }
+
+        // 页面加载时调整
+        window.addEventListener('load', adjustFontSize);
+
+        // 窗口大小变化时调整
+        window.addEventListener('resize', adjustFontSize);
+    </script>
+</body>
+
+</html>

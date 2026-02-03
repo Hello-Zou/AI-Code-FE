@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>响应式导航栏 - 2026年1月30日</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            padding-top: 80px;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* 导航栏样式 */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #fff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            z-index: 1000;
+            padding: 0 20px;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 10px;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #3a86ff;
+            text-decoration: none;
+            padding: 20px 0;
+        }
+
+        .logo span {
+            color: #ff006e;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+        }
+
+        .nav-item {
+            position: relative;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: #555;
+            font-weight: 500;
+            font-size: 1rem;
+            padding: 10px 5px;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            color: #3a86ff;
+        }
+
+        .nav-link.active {
+            color: #3a86ff;
+        }
+
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: #3a86ff;
+            border-radius: 2px;
+        }
+
+        .hamburger {
+            display: none;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 10px;
+        }
+
+        .bar {
+            display: block;
+            width: 25px;
+            height: 3px;
+            margin: 5px auto;
+            transition: all 0.3s ease-in-out;
+            background-color: #555;
+            border-radius: 2px;
+        }
+
+        /* 页面内容样式 */
+        .content-section {
+            padding: 80px 0;
+            margin-bottom: 40px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .content-section h2 {
+            font-size: 2.2rem;
+            margin-bottom: 20px;
+            color: #3a86ff;
+        }
+
+        .content-section p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        .code-snippet {
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-family: 'Consolas', monospace;
+            overflow-x: auto;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            color: #666;
+            border-top: 1px solid #eee;
+            margin-top: 40px;
+        }
+
+        /* 响应式设计 */
+        @media screen and (max-width: 768px) {
+            body {
+                padding-top: 70px;
+            }
+
+            .hamburger {
+                display: block;
+            }
+
+            .hamburger.active .bar:nth-child(2) {
+                opacity: 0;
+            }
+
+            .hamburger.active .bar:nth-child(1) {
+                transform: translateY(8px) rotate(45deg);
+            }
+
+            .hamburger.active .bar:nth-child(3) {
+                transform: translateY(-8px) rotate(-45deg);
+            }
+
+            .nav-menu {
+                position: fixed;
+                left: -100%;
+                top: 70px;
+                gap: 0;
+                flex-direction: column;
+                background-color: #fff;
+                width: 100%;
+                text-align: center;
+                transition: 0.3s;
+                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+                padding: 20px 0;
+                z-index: 999;
+            }
+
+            .nav-menu.active {
+                left: 0;
+            }
+
+            .nav-item {
+                margin: 15px 0;
+            }
+
+            .content-section {
+                padding: 40px 0;
+            }
+        }
+
+        /* 滚动行为 */
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="#home" class="logo">前端<span>代码</span></a>
+
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#home" class="nav-link active">首页</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#about" class="nav-link">关于</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#features" class="nav-link">功能</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#code" class="nav-link">代码示例</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#contact" class="nav-link">联系</a>
+                </li>
+            </ul>
+
+            <button class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- 首页部分 -->
+        <section id="home" class="content-section">
+            <h2>响应式导航栏组件</h2>
+            <p>这是一个简洁实用的响应式导航栏，包含移动端汉堡菜单和桌面端水平导航。适用于大多数现代网站。</p>
+            <p>创建日期：<strong>2026年1月30日</strong></p>
+            <div class="code-snippet">
+                // 响应式导航栏 JavaScript 代码
+                const hamburger = document.querySelector('.hamburger');
+                const navMenu = document.querySelector('.nav-menu');
+
+                hamburger.addEventListener('click', () => {
+                hamburger.classList.toggle('active');
+                navMenu.classList.toggle('active');
+                });
+            </div>
+        </section>
+
+        <!-- 关于部分 -->
+        <section id="about" class="content-section">
+            <h2>关于此组件</h2>
+            <p>这个导航栏组件使用纯HTML、CSS和JavaScript实现，无需任何外部依赖。它具有以下特性：</p>
+            <ul>
+                <li>响应式设计 - 自动适应不同屏幕尺寸</li>
+                <li>汉堡菜单动画 - 点击时显示平滑过渡效果</li>
+                <li>当前页面高亮 - 显示用户当前位置</li>
+                <li>平滑滚动 - 点击导航项时平滑滚动到对应部分</li>
+            </ul>
+        </section>
+
+        <!-- 功能部分 -->
+        <section id="features" class="content-section">
+            <h2>功能特性</h2>
+            <p>1. <strong>移动端优化</strong>：在屏幕宽度小于768px时自动切换为汉堡菜单。</p>
+            <p>2. <strong>可访问性</strong>：使用语义化HTML标签，支持键盘导航。</p>
+            <p>3. <strong>性能优化</strong>：使用CSS过渡实现动画，性能高效。</p>
+            <p>4. <strong>易于定制</strong>：通过CSS变量可以轻松更改颜色、尺寸等样式。</p>
+        </section>
+
+        <!-- 代码部分 -->
+        <section id="code" class="content-section">
+            <h2>实现原理</h2>
+            <p>这个导航栏的核心原理是通过CSS媒体查询检测屏幕宽度，在移动端隐藏导航菜单并显示汉堡按钮。点击汉堡按钮时，通过JavaScript切换CSS类来显示/隐藏菜单。</p>
+            <div class="code-snippet">
+                /* 核心CSS - 移动端菜单切换 */
+                .nav-menu {
+                display: flex; /* 桌面端显示 */
+                }
+
+                @media screen and (max-width: 768px) {
+                .nav-menu {
+                position: fixed;
+                left: -100%; /* 隐藏菜单 */
+                top: 70px;
+                flex-direction: column;
+                }
+
+                .nav-menu.active {
+                left: 0; /* 显示菜单 */
+                }
+                }
+            </div>
+        </section>
+
+        <!-- 联系部分 -->
+        <section id="contact" class="content-section">
+            <h2>联系我们</h2>
+            <p>如果您有任何问题或建议，欢迎联系我们。</p>
+            <p>这个组件可以轻松集成到任何网站项目中，只需复制HTML、CSS和JavaScript代码即可使用。</p>
+        </section>
+    </div>
+
+    <footer>
+        <p>前端代码片段 &copy; 2026年1月30日 | 响应式导航栏组件</p>
+    </footer>
+
+    <script>
+        // 响应式导航栏功能
+        document.addEventListener('DOMContentLoaded', function () {
+            const hamburger = document.querySelector('.hamburger');
+            const navMenu = document.querySelector('.nav-menu');
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('.content-section');
+
+            // 汉堡菜单点击事件
+            hamburger.addEventListener('click', () => {
+                hamburger.classList.toggle('active');
+                navMenu.classList.toggle('active');
+            });
+
+            // 导航链接点击事件
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+
+                    // 移除所有active类
+                    navLinks.forEach(item => item.classList.remove('active'));
+
+                    // 添加当前active类
+                    link.classList.add('active');
+
+                    // 关闭移动端菜单
+                    hamburger.classList.remove('active');
+                    navMenu.classList.remove('active');
+
+                    // 滚动到对应部分
+                    const targetId = link.getAttribute('href');
+                    if (targetId !== '#') {
+                        const targetSection = document.querySelector(targetId);
+                        if (targetSection) {
+                            window.scrollTo({
+                                top: targetSection.offsetTop - 80,
+                                behavior: 'smooth'
+                            });
+                        }
+                    }
+                });
+            });
+
+            // 滚动时更新当前活动链接
+            window.addEventListener('scroll', () => {
+                let current = '';
+                const scrollPosition = window.scrollY + 100;
+
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    const sectionHeight = section.clientHeight;
+
+                    if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === `#${current}`) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+
+            // 页面加载时设置当前活动链接
+            const currentHash = window.location.hash || '#home';
+            const currentLink = document.querySelector(`.nav-link[href="${currentHash}"]`);
+            if (currentLink) {
+                navLinks.forEach(link => link.classList.remove('active'));
+                currentLink.classList.add('active');
+            }
+        });
+    </script>
+</body>
+
+</html>
